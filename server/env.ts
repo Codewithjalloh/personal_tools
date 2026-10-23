@@ -1,5 +1,11 @@
 export function getEnv(name: string): string | undefined {
-  return process.env[name]?.trim() || undefined
+  const raw = process.env[name]
+  if (!raw) return undefined
+  let v = raw.trim()
+  if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) {
+    v = v.slice(1, -1).trim()
+  }
+  return v || undefined
 }
 
 export function requireEnv(name: string): string {

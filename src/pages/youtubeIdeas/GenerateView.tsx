@@ -1,4 +1,5 @@
-import { useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
+import { apiConfigStatus } from '../../lib/youtubeIdeas/api'
 import {
   DEFAULT_SERIES_TITLE,
   IDEA_COUNTS,
@@ -35,6 +36,17 @@ export function GenerateView() {
   const [phases, setPhases] = useState<GenerationPhase[]>(INITIAL_PHASES)
   const [percent, setPercent] = useState(0)
   const [savedKeys, setSavedKeys] = useState<Set<string>>(() => new Set())
+  const [configHint, setConfigHint] = useState<string | null>(null)
+
+  useEffect(() => {
+    void apiConfigStatus().then((s) => {
+      if (!s.pexels) {
+        setConfigHint(
+          'Pexels is not configured on the server — images will be empty until you add PEXELS_API_KEY in .env.local (restart dev) or Settings, or in Vercel env vars for production.',
+        )
+      }
+    })
+  }, [])
 
   const setPhase = (id: string, patch: Partial<GenerationPhase>) => {
     setPhases((prev) => prev.map((p) => (p.id === id ? { ...p, ...patch } : p)))
@@ -73,13 +85,17 @@ export function GenerateView() {
         setPercent(35 + ((i + 0.5) / total) * 50)
 
         let images: EpisodeWithImages['images'] = []
+        let imageWarning: string | undefined
         try {
           const res = await apiSearchImages(ep.imageSearchQueries, 7)
           images = res.images
-        } catch {
+          imageWarning = res.warning
+          if (!res.pexelsConfigured && res.warning) setConfigHint(res.warning)
+        } catch (e) {
+          imageWarning = e instanceof Error ? e.message : 'Image search failed'
           images = []
         }
-        withImages.push({ ...ep, images })
+        withImages.push({ ...ep, images, imageWarning })
         setPercent(35 + ((i + 1) / total) * 50)
       }
 
@@ -219,6 +235,12 @@ export function GenerateView() {
           </button>
         </div>
       </form>
+
+      {configHint && (
+        <p className="rounded-xl border border-amber-900/40 bg-amber-950/25 px-4 py-3 text-sm text-amber-100/90">
+          {configHint}
+        </p>
+      )}
 
       {error && (
         <p className="rounded-xl border border-red-900/50 bg-red-950/30 px-4 py-3 text-sm text-red-200">{error}</p>

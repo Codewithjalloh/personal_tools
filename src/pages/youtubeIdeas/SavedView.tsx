@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import type { IdeaStatus } from '../../../shared/youtubeIdeas/types'
-import { deleteIdea, listSavedIdeas, updateIdeaStatus } from '../../lib/youtubeIdeas/store'
+import { listSavedIdeas, updateIdeaStatus } from '../../lib/youtubeIdeas/store'
 
 const STATUSES: IdeaStatus[] = ['Idea', 'Researching', 'Script Ready', 'Recorded', 'Published']
 
@@ -25,17 +26,13 @@ export function SavedView() {
     return list
   }, [query, statusFilter, refresh])
 
-  const remove = (id: string, title: string) => {
-    if (!confirm(`Delete "${title}"? This cannot be undone.`)) return
-    deleteIdea(id)
-    setRefresh((n) => n + 1)
-  }
-
   return (
     <div className="space-y-6">
       <header>
         <h2 className="text-2xl font-semibold text-white">My Saved Ideas</h2>
+        <p className="mt-1 text-sm text-zinc-500">Tap an idea to open the full script on its own page.</p>
       </header>
+
       <div className="flex flex-wrap gap-3">
         <input
           type="search"
@@ -57,39 +54,47 @@ export function SavedView() {
           ))}
         </select>
       </div>
+
       {ideas.length === 0 ? (
         <p className="text-sm text-zinc-500">No saved ideas match your filters.</p>
       ) : (
-        <ul className="space-y-4">
+        <ul className="space-y-3">
           {ideas.map((idea) => (
-            <li key={idea.id} className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-5">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <p className="text-xs text-amber-500/80">Part {idea.partNumber}</p>
-                  <h3 className="text-lg font-medium text-white">{idea.title}</h3>
-                  <p className="mt-1 text-sm text-zinc-500">{idea.inspiration.name}</p>
-                </div>
-                <select
-                  value={idea.status}
-                  onChange={(e) => {
-                    updateIdeaStatus(idea.id, e.target.value as IdeaStatus)
-                    setRefresh((n) => n + 1)
-                  }}
-                  className="rounded-lg border border-zinc-700 bg-zinc-950 px-2 py-1 text-xs"
-                >
-                  {STATUSES.map((s) => (
-                    <option key={s}>{s}</option>
-                  ))}
-                </select>
-              </div>
-              <p className="mt-3 line-clamp-2 text-sm text-zinc-400">{idea.openingQuestion}</p>
-              <button
-                type="button"
-                onClick={() => remove(idea.id, idea.title)}
-                className="mt-4 text-xs text-red-400 hover:text-red-300"
+            <li key={idea.id}>
+              <Link
+                to={`/tools/youtube-ideas/saved/${idea.id}`}
+                className="group block rounded-xl border border-zinc-800 bg-zinc-900/50 p-5 transition hover:border-amber-500/40 hover:bg-zinc-900"
               >
-                Delete
-              </button>
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs text-amber-500/80">Part {idea.partNumber}</p>
+                    <h3 className="mt-1 text-lg font-medium leading-snug text-white group-hover:text-amber-100">
+                      {idea.title}
+                    </h3>
+                    <p className="mt-1 text-sm text-zinc-500">{idea.inspiration.name}</p>
+                    <p className="mt-3 line-clamp-2 text-sm text-zinc-400">{idea.openingQuestion}</p>
+                  </div>
+                  <select
+                    value={idea.status}
+                    onClick={(e) => e.preventDefault()}
+                    onChange={(e) => {
+                      e.stopPropagation()
+                      updateIdeaStatus(idea.id, e.target.value as IdeaStatus)
+                      setRefresh((n) => n + 1)
+                    }}
+                    className="rounded-lg border border-zinc-700 bg-zinc-950 px-2 py-1 text-xs"
+                  >
+                    {STATUSES.map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <span className="mt-4 inline-block text-xs font-medium text-amber-500/80 group-hover:text-amber-400">
+                  Open script →
+                </span>
+              </Link>
             </li>
           ))}
         </ul>

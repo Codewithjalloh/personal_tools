@@ -7,7 +7,12 @@ import { generateEpisodeContent, type ContentKind } from './generateContent'
 import { generatedEpisodeSchema } from './youtubeIdeasSchemas'
 import { rateLimit, readJsonBody, sendError, sendJson } from './http'
 import { generateAiThumbnail } from './generateThumbnail'
-import { runWithRequestSecretsAsync, secretsFromHeaders, resolveOpenAiKey } from './requestSecrets'
+import {
+  runWithRequestSecretsAsync,
+  secretsFromHeaders,
+  resolveOpenAiKey,
+  resolvePexelsKey,
+} from './requestSecrets'
 
 export function devApiPlugin(): Plugin {
   return {
@@ -20,12 +25,17 @@ export function devApiPlugin(): Plugin {
         if (!url?.startsWith('/api/')) return next()
 
         if (url === '/api/config-status' && req.method === 'GET') {
-          try {
-            resolveOpenAiKey()
-            sendJson(res, 200, { openai: true })
-          } catch {
-            sendJson(res, 200, { openai: false })
-          }
+          loadLocalEnv()
+          await runWithRequestSecretsAsync(secretsFromHeaders(req.headers as Record<string, string | string[] | undefined>), async () => {
+            let openai = false
+            try {
+              resolveOpenAiKey()
+              openai = true
+            } catch {
+              openai = false
+            }
+            sendJson(res, 200, { openai, pexels: !!resolvePexelsKey() })
+          })
           return
         }
 
@@ -64,11 +74,8 @@ export function devApiPlugin(): Plugin {
                   limit: z.number().int().min(1).max(15).optional(),
                 })
                 .parse(body)
-              const images = await searchImagesForQueries(parsed.queries, parsed.limit ?? 7)
-              sendJson(res, 200, {
-                images,
-                warning: images.length === 0 ? 'Add Pexels key in Settings or PEXELS_API_KEY in .env.local.' : undefined,
-              })
+              const result = await searchImagesForQueries(parsed.queries, parsed.limit ?? 7)
+              sendJson(res, 200, result)
               return
             }
 

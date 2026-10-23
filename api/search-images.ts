@@ -16,11 +16,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     await runWithRequestSecretsAsync(secrets, async () => {
       const { queries, limit } = bodySchema.parse(req.body)
-      const images = await searchImagesForQueries(queries, limit ?? 7)
-      return res.status(200).json({
-        images,
-        warning: images.length === 0 ? 'Add Pexels key in Settings or PEXELS_API_KEY in .env.local.' : undefined,
-      })
+      const result = await searchImagesForQueries(queries, limit ?? 7)
+      return res.status(200).json(result)
     })
   } catch (e) {
     const message = e instanceof Error ? e.message : 'Image search failed'

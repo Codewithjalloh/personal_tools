@@ -6,6 +6,7 @@ import { YoutubeIdeasLayout } from './pages/youtubeIdeas/YoutubeIdeasLayout'
 import { DashboardView } from './pages/youtubeIdeas/DashboardView'
 import { GenerateView } from './pages/youtubeIdeas/GenerateView'
 import { SavedView } from './pages/youtubeIdeas/SavedView'
+import { SavedIdeaDetailView } from './pages/youtubeIdeas/SavedIdeaDetailView'
 import { SeriesView } from './pages/youtubeIdeas/SeriesView'
 import { SettingsView } from './pages/youtubeIdeas/SettingsView'
 
@@ -20,6 +21,7 @@ export default function App() {
           <Route index element={<DashboardView />} />
           <Route path="generate" element={<GenerateView />} />
           <Route path="saved" element={<SavedView />} />
+          <Route path="saved/:ideaId" element={<SavedIdeaDetailView />} />
           <Route path="series" element={<SeriesView />} />
           <Route path="settings" element={<SettingsView />} />
         </Route>

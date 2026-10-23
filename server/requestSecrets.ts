@@ -19,9 +19,19 @@ export async function runWithRequestSecretsAsync<T>(
   return storage.run(secrets, fn)
 }
 
+function normalizeSecret(value: string | undefined): string | undefined {
+  if (!value) return undefined
+  let k = value.trim()
+  if (k.toLowerCase().startsWith('bearer ')) k = k.slice(7).trim()
+  if ((k.startsWith('"') && k.endsWith('"')) || (k.startsWith("'") && k.endsWith("'"))) {
+    k = k.slice(1, -1).trim()
+  }
+  return k || undefined
+}
+
 function headerKey(value: string | string[] | undefined): string | undefined {
   const v = Array.isArray(value) ? value[0] : value
-  return v?.trim() || undefined
+  return normalizeSecret(v)
 }
 
 export function secretsFromHeaders(headers: Record<string, string | string[] | undefined>): RequestSecrets {
@@ -32,8 +42,7 @@ export function secretsFromHeaders(headers: Record<string, string | string[] | u
 }
 
 export function resolveOpenAiKey(): string {
-  const fromRequest = storage.getStore()?.openAiKey
-  const key = fromRequest || getEnv('OPENAI_API_KEY')
+  const key = normalizeSecret(getEnv('OPENAI_API_KEY')) || normalizeSecret(storage.getStore()?.openAiKey)
   if (!key) {
     throw new Error(
       'OPENAI_API_KEY is not configured. Add it in YouTube Ideas → Settings, or in .env.local at the project root.',
@@ -43,7 +52,7 @@ export function resolveOpenAiKey(): string {
 }
 
 export function resolvePexelsKey(): string | undefined {
-  return storage.getStore()?.pexelsKey || getEnv('PEXELS_API_KEY')
+  return normalizeSecret(getEnv('PEXELS_API_KEY')) || normalizeSecret(storage.getStore()?.pexelsKey)
 }
 
 export function hasOpenAiKeyConfigured(): boolean {

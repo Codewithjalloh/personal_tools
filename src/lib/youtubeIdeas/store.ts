@@ -38,6 +38,10 @@ export function listSavedIdeas(): SavedIdea[] {
   return loadIdeas().sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
 }
 
+export function getSavedIdeaById(id: string): SavedIdea | undefined {
+  return loadIdeas().find((i) => i.id === id)
+}
+
 export function saveIdea(input: Omit<SavedIdea, 'id' | 'createdAt' | 'updatedAt'> & { id?: string }): SavedIdea {
   const now = new Date().toISOString()
   const idea: SavedIdea = {

@@ -21,8 +21,13 @@ export async function apiGenerateIdeas(req: GenerateIdeasRequest): Promise<Gener
 export async function apiSearchImages(
   queries: string[],
   limit = 7,
-): Promise<{ images: ImageAsset[]; warning?: string }> {
+): Promise<{ images: ImageAsset[]; pexelsConfigured: boolean; warning?: string }> {
   return postJson('/api/search-images', { queries, limit })
+}
+
+export async function apiConfigStatus(): Promise<{ openai: boolean; pexels: boolean }> {
+  const res = await fetch('/api/config-status')
+  return res.json() as Promise<{ openai: boolean; pexels: boolean }>
 }
 
 export async function apiGenerateAiThumbnail(episode: GeneratedEpisode): Promise<string> {
@@ -45,4 +50,5 @@ export async function apiGenerateContent(
 export type EpisodeWithImages = GeneratedEpisode & {
   images: ImageAsset[]
   thumbnailDataUrl?: string
+  imageWarning?: string
 }

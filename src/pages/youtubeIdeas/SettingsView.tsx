@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { apiConfigStatus } from '../../lib/youtubeIdeas/api'
 import {
   getStoredOpenAiKey,
   getStoredPexelsKey,
@@ -10,6 +11,11 @@ export function SettingsView() {
   const [openAiKey, setOpenAiKey] = useState(() => getStoredOpenAiKey())
   const [pexelsKey, setPexelsKey] = useState(() => getStoredPexelsKey())
   const [saved, setSaved] = useState(false)
+  const [status, setStatus] = useState<{ openai: boolean; pexels: boolean } | null>(null)
+
+  useEffect(() => {
+    void apiConfigStatus().then(setStatus)
+  }, [saved])
 
   const save = () => {
     setStoredOpenAiKey(openAiKey)
@@ -55,11 +61,17 @@ export function SettingsView() {
         >
           {saved ? 'Saved' : 'Save keys'}
         </button>
+        {status && (
+          <p className="text-xs text-zinc-500">
+            Server sees: OpenAI {status.openai ? '✓' : '✗'} · Pexels {status.pexels ? '✓' : '✗'}
+            {!status.pexels && ' — add Pexels key above and click Save, or set PEXELS_API_KEY on Vercel.'}
+          </p>
+        )}
         <p className="text-xs leading-relaxed text-zinc-500">
-          Fastest setup: paste your OpenAI key above and click Save — no restart needed. Alternatively, set{' '}
-          <code className="text-zinc-400">OPENAI_API_KEY</code> in <code className="text-zinc-400">.env.local</code>{' '}
-          and restart <code className="text-zinc-400">npm run dev</code>. On Vercel, use Project → Environment
-          Variables (Settings keys are for local dev only).
+          Keys in <code className="text-zinc-400">.env.local</code> or Vercel environment variables take priority over
+          saved browser keys. If Pexels shows &quot;Invalid API key&quot;, clear the Pexels field here, click Save, then
+          restart <code className="text-zinc-400">npm run dev</code> so <code className="text-zinc-400">PEXELS_API_KEY</code>{' '}
+          from <code className="text-zinc-400">.env.local</code> is used.
         </p>
       </section>
     </div>

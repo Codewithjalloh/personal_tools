@@ -62,11 +62,16 @@ export function IdeaCard({ episode, onSave, saved = false, onRegenerate }: Props
     }
   }
 
+  const [imageWarning, setImageWarning] = useState(episode.imageWarning)
+
   const replaceImages = async () => {
     setBusy('images')
     try {
-      const { images: found } = await apiSearchImages(episode.imageSearchQueries, 7)
-      if (found.length) setImages(found)
+      const res = await apiSearchImages(episode.imageSearchQueries, 7)
+      if (res.images.length) setImages(res.images)
+      setImageWarning(res.warning ?? (res.images.length ? undefined : 'No images returned from Pexels.'))
+    } catch (e) {
+      setImageWarning(e instanceof Error ? e.message : 'Image search failed')
     } finally {
       setBusy(null)
     }
@@ -207,8 +212,17 @@ export function IdeaCard({ episode, onSave, saved = false, onRegenerate }: Props
 
       <div className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {images.length === 0 ? (
-          <div className="col-span-full rounded-xl border border-dashed border-zinc-700 bg-zinc-950/60 p-8 text-center text-sm text-zinc-500">
-            Loading up to 7 licensed images — check Pexels key if empty.
+          <div className="col-span-full rounded-xl border border-dashed border-zinc-700 bg-zinc-950/60 p-8 text-center text-sm text-zinc-400">
+            <p>No reference images loaded.</p>
+            {imageWarning && <p className="mt-2 text-xs text-amber-200/80">{imageWarning}</p>}
+            <button
+              type="button"
+              onClick={() => void replaceImages()}
+              disabled={!!busy}
+              className="mt-4 rounded-lg bg-amber-500/90 px-4 py-2 text-xs font-semibold text-black hover:bg-amber-400 disabled:opacity-50"
+            >
+              Retry image search
+            </button>
           </div>
         ) : (
           images.map((img, i) => (
