@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
+import { rankEpisodeImages } from '../../../shared/youtubeIdeas/episodeImages'
 import type { SavedIdea, ThumbnailPrefs } from '../../../shared/youtubeIdeas/types'
 import { downloadEpisodeImagesZip } from '../../lib/youtubeIdeas/downloadImagesZip'
 import { saveIdea } from '../../lib/youtubeIdeas/store'
@@ -19,7 +20,10 @@ export function SavedIdeaProductionPanel({ idea, onUpdated }: Props) {
     'No YouTube description was saved with this idea. Generate a new episode and save again, or copy from your notes.'
   const tags = idea.tags ?? []
   const playlist = idea.playlistCategory?.trim() || idea.category || '—'
-  const images = idea.images ?? []
+  const images = useMemo(
+    () => rankEpisodeImages(idea.images ?? [], youtubeTitle),
+    [idea.images, youtubeTitle],
+  )
   const thumbnail = idea.thumbnailDataUrl
 
   const copy = async (text: string, label: string) => {

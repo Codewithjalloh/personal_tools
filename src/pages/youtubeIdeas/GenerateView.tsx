@@ -17,6 +17,7 @@ import {
   saveGenerateFormPrefs,
   type GenerateFormPrefs,
 } from '../../lib/youtubeIdeas/generateFormPrefs'
+import { rankEpisodeImages } from '../../../shared/youtubeIdeas/episodeImages'
 import { mapWithConcurrency } from '../../lib/youtubeIdeas/mapWithConcurrency'
 import {
   listSeries,
@@ -155,7 +156,8 @@ export function GenerateView() {
           detail: `Loaded images for ${completed} / ${total}…`,
         })
         setPercent(35 + (completed / total) * 50)
-        return { ...ep, images, imageWarning }
+        const ranked = rankEpisodeImages(images, ep.youtubeTitle || ep.title)
+        return { ...ep, images: ranked, imageWarning }
       })
 
       setPhase('images', { status: 'done', detail: 'Images loaded' })

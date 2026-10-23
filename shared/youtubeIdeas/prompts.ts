@@ -14,7 +14,7 @@ Rules:
 - closingQuestion MUST begin with "But perhaps the more important question is" (natural grammar after).
 - africanConnection: 2-3 substantial paragraphs as separate strings in the array.
 - discussionQuestions: 4-6 questions suitable for a 15-30 minute episode.
-- imageSearchQueries: 5-8 concrete search phrases for REAL photographs or historical artwork (philosophy, Africa, documentary). Do NOT output image URLs.
+- imageSearchQueries: 5-8 concrete Pexels-style search phrases for REAL photographs. Put the episode topic FIRST (e.g. love, marriage, Lagos street life, university students)—not generic "Plato" or "Greek statue" unless the episode is mainly about that person. Mix African documentary scenes with at most ONE classical art query when relevant. Do NOT output image URLs.
 - youtubeTitle: compelling YouTube title (≤100 chars), may include Part N and Excellent117; optimized for search but not clickbait.
 - youtubeDescription: full YouTube description with hook, episode summary, discussion questions as bullets, hashtags, and placeholders for timestamps.
 - playlistCategory: one standard YouTube category (e.g. Education, People & Blogs, News & Politics, Nonprofits & Activism).

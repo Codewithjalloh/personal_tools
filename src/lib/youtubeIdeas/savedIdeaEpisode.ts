@@ -10,7 +10,12 @@ export function savedIdeaToGeneratedEpisode(idea: SavedIdea): GeneratedEpisode {
     africanConnection: idea.africanConnection,
     discussionQuestions: idea.discussionQuestions,
     closingQuestion: idea.closingQuestion,
-    imageSearchQueries: ['Africa documentary', 'philosophy portrait', idea.inspiration.name],
+    imageSearchQueries: [
+      idea.title,
+      idea.category,
+      `${idea.region ?? 'Africa'} daily life`,
+      idea.inspiration.name,
+    ],
     category: idea.category,
     youtubeTitle: idea.youtubeTitle?.trim() || idea.title,
     youtubeDescription:

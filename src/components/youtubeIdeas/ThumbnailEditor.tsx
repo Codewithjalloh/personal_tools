@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { ImageAsset, ThumbnailFontId, ThumbnailPrefs, ThumbnailTextAlign } from '../../../shared/youtubeIdeas/types'
+import { pickThumbnailBackground } from '../../../shared/youtubeIdeas/episodeImages'
 import {
   THUMBNAIL_ALIGN_OPTIONS,
   THUMBNAIL_DEFAULT_COLORS,
@@ -101,7 +102,8 @@ export function ThumbnailEditor({
   onAiGenerate,
   disabled = false,
 }: Props) {
-  const initialBg = thumbnailPrefs?.backgroundUrl ?? images[0]?.url
+  const initialBg =
+    thumbnailPrefs?.backgroundUrl ?? pickThumbnailBackground(defaultHeadline, images) ?? images[0]?.url
   const [prefs, setPrefs] = useState<ThumbnailPrefs>(() =>
     thumbnailPrefs
       ? normalizeThumbnailPrefs(thumbnailPrefs, partNumber, defaultHeadline)
@@ -147,9 +149,12 @@ export function ThumbnailEditor({
   }, [thumbnailDataUrl, preview])
 
   useEffect(() => {
-    if (prefs.backgroundUrl || !images[0]?.url) return
-    patchPrefs({ backgroundUrl: images[0].url })
-  }, [images])
+    if (thumbnailPrefs?.backgroundUrl || !images.length) return
+    const best = pickThumbnailBackground(defaultHeadline, images)
+    if (!best || best === prefs.backgroundUrl) return
+    setDirty(true)
+    setPrefs((p) => ({ ...p, backgroundUrl: best }))
+  }, [images, defaultHeadline, thumbnailPrefs?.backgroundUrl, prefs.backgroundUrl])
 
   const selectImage = (url: string) => {
     patchPrefs({ backgroundUrl: url })

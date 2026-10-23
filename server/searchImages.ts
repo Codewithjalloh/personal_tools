@@ -10,13 +10,13 @@ type PexelsPhoto = {
 }
 
 const FALLBACK_QUERIES = [
-  'African city life documentary',
-  'African university students',
-  'African market street',
-  'philosophy thinking portrait',
-  'historical painting museum',
-  'African entrepreneur working',
-  'African community gathering',
+  'African city street life',
+  'African university students campus',
+  'West African market traders',
+  'African family community gathering',
+  'African young professionals office',
+  'Nigerian Lagos skyline dusk',
+  'African wedding celebration',
 ]
 
 export type ImageSearchResult = {
@@ -56,29 +56,41 @@ export async function searchImagesForQuery(query: string, perPage = 15): Promise
 async function collectImages(queries: string[], totalWanted: number): Promise<ImageAsset[]> {
   const out: ImageAsset[] = []
   const seen = new Set<string>()
-  if (queries.length === 0) return out
+  const uniqueQueries = [...new Set(queries.map((q) => q.trim()).filter(Boolean))]
+  if (uniqueQueries.length === 0) return out
 
-  let qIndex = 0
-  let attempts = 0
-  const maxAttempts = Math.max(queries.length * 4, 8)
   let lastError: string | undefined
 
-  while (out.length < totalWanted && attempts < maxAttempts) {
-    const q = queries[qIndex % queries.length]
-    qIndex++
-    attempts++
+  const tryAddFromQuery = async (q: string, maxFromQuery: number) => {
     try {
-      const need = totalWanted - out.length
-      const found = await searchImagesForQuery(q, need + 3)
+      const found = await searchImagesForQuery(q, maxFromQuery + 4)
+      let added = 0
       for (const img of found) {
         if (seen.has(img.url)) continue
         seen.add(img.url)
         out.push(img)
-        if (out.length >= totalWanted) break
+        added++
+        if (added >= maxFromQuery || out.length >= totalWanted) break
       }
     } catch (e) {
       lastError = e instanceof Error ? e.message : 'Pexels request failed'
     }
+  }
+
+  // One photo per query first so early queries do not fill the whole set with Plato busts.
+  for (const q of uniqueQueries) {
+    if (out.length >= totalWanted) break
+    await tryAddFromQuery(q, 1)
+  }
+
+  let qIndex = 0
+  let attempts = 0
+  const maxAttempts = Math.max(uniqueQueries.length * 3, 10)
+  while (out.length < totalWanted && attempts < maxAttempts) {
+    const q = uniqueQueries[qIndex % uniqueQueries.length]
+    qIndex++
+    attempts++
+    await tryAddFromQuery(q, 2)
   }
 
   if (out.length === 0 && lastError) {

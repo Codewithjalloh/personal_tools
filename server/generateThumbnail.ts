@@ -3,10 +3,10 @@ import { createOpenAI } from './openaiJson'
 
 export async function generateAiThumbnail(episode: GeneratedEpisode): Promise<string> {
   const client = createOpenAI()
-  const prompt = `Professional YouTube podcast thumbnail, cinematic documentary style, 16:9.
-Topic: ${episode.title}. Philosophical inspiration: ${episode.inspiration.name}.
-Modern African society, thoughtful mood, gold and charcoal color accents, high contrast, no watermark.
-Do not include readable text or logos in the image.`
+  const prompt = `Professional YouTube podcast thumbnail, cinematic documentary photography, 16:9.
+Main visual theme must reflect this episode title: "${episode.title}" (category: ${episode.category}).
+Setting: contemporary African life or society matching that theme—not a generic marble Greek philosopher statue unless the title is explicitly about ancient Greece.
+Mood: thoughtful, editorial. Color accents: gold and charcoal. High contrast. No readable text, no logos, no watermarks.`
 
   const result = await client.images.generate({
     model: 'dall-e-3',

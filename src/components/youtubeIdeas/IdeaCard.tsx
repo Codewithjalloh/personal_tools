@@ -3,6 +3,7 @@ import type { EpisodeWithImages } from '../../lib/youtubeIdeas/api'
 import { apiGenerateAiThumbnail, apiSearchImages } from '../../lib/youtubeIdeas/api'
 import { IdeaResearchTools } from './IdeaResearchTools'
 import { downloadEpisodeImagesZip } from '../../lib/youtubeIdeas/downloadImagesZip'
+import { rankEpisodeImages } from '../../../shared/youtubeIdeas/episodeImages'
 import type { ImageAsset, ThumbnailPrefs } from '../../../shared/youtubeIdeas/types'
 import { ThumbnailEditor } from './ThumbnailEditor'
 
@@ -14,7 +15,8 @@ type Props = {
 }
 
 export function IdeaCard({ episode, onSave, saved = false, onRegenerate }: Props) {
-  const [images, setImages] = useState<ImageAsset[]>(episode.images)
+  const headline = episode.youtubeTitle || episode.title
+  const [images, setImages] = useState<ImageAsset[]>(() => rankEpisodeImages(episode.images, headline))
   const [thumbnail, setThumbnail] = useState<string | undefined>(episode.thumbnailDataUrl)
   const [thumbnailPrefs, setThumbnailPrefs] = useState<ThumbnailPrefs | undefined>(episode.thumbnailPrefs)
   const [busy, setBusy] = useState<string | null>(null)
@@ -32,7 +34,7 @@ export function IdeaCard({ episode, onSave, saved = false, onRegenerate }: Props
     setBusy('images')
     try {
       const res = await apiSearchImages(episode.imageSearchQueries, 7)
-      if (res.images.length) setImages(res.images)
+      if (res.images.length) setImages(rankEpisodeImages(res.images, headline))
       setImageWarning(res.warning ?? (res.images.length ? undefined : 'No images returned from Pexels.'))
     } catch (e) {
       setImageWarning(e instanceof Error ? e.message : 'Image search failed')
