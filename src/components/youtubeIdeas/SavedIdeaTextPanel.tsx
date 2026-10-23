@@ -1,22 +1,35 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import type { SavedIdea } from '../../../shared/youtubeIdeas/types'
 import { formatSavedIdeaAsText } from '../../lib/youtubeIdeas/savedIdeaText'
 import type { ReaderPrefs } from '../../lib/youtubeIdeas/readerPrefs'
 import { loadReaderPrefs, saveReaderPrefs } from '../../lib/youtubeIdeas/readerPrefs'
+import { updateIdeaHighlights } from '../../lib/youtubeIdeas/store'
 import { ReadingToolbar } from './ReadingToolbar'
 
 type Props = {
   idea: SavedIdea
+  onHighlightsChange?: () => void
 }
 
-export function SavedIdeaTextPanel({ idea }: Props) {
+export function SavedIdeaTextPanel({ idea, onHighlightsChange }: Props) {
   const [prefs, setPrefs] = useState<ReaderPrefs>(() => loadReaderPrefs())
-  const [highlighted, setHighlighted] = useState<Set<string>>(() => new Set())
+  const [highlighted, setHighlighted] = useState<Set<string>>(
+    () => new Set(idea.textHighlightIds ?? []),
+  )
+
+  useEffect(() => {
+    setHighlighted(new Set(idea.textHighlightIds ?? []))
+  }, [idea.id, idea.textHighlightIds])
 
   const updatePrefs = useCallback((next: ReaderPrefs) => {
     setPrefs(next)
     saveReaderPrefs(next)
   }, [])
+
+  const persistHighlights = (next: Set<string>) => {
+    updateIdeaHighlights(idea.id, [...next])
+    onHighlightsChange?.()
+  }
 
   const toggleHighlight = (id: string) => {
     if (!prefs.highlightMode) return
@@ -24,6 +37,7 @@ export function SavedIdeaTextPanel({ idea }: Props) {
       const next = new Set(prev)
       if (next.has(id)) next.delete(id)
       else next.add(id)
+      persistHighlights(next)
       return next
     })
   }
@@ -49,7 +63,10 @@ export function SavedIdeaTextPanel({ idea }: Props) {
         <ReadingToolbar
           prefs={prefs}
           onChange={updatePrefs}
-          onClearHighlights={() => setHighlighted(new Set())}
+          onClearHighlights={() => {
+            setHighlighted(new Set())
+            persistHighlights(new Set())
+          }}
         />
         <div className="flex justify-end">
           <button

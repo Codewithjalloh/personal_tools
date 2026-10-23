@@ -1,4 +1,10 @@
-import type { GeneratedEpisode, GenerateIdeasRequest, GenerateIdeasResponse, ImageAsset } from '../../../shared/youtubeIdeas/types'
+import type {
+  GeneratedEpisode,
+  GenerateIdeasRequest,
+  GenerateIdeasResponse,
+  ImageAsset,
+  ThumbnailPrefs,
+} from '../../../shared/youtubeIdeas/types'
 import { apiKeyHeaders } from './secretsStorage'
 
 async function postJson<T>(path: string, body: unknown): Promise<T> {
@@ -50,5 +56,6 @@ export async function apiGenerateContent(
 export type EpisodeWithImages = GeneratedEpisode & {
   images: ImageAsset[]
   thumbnailDataUrl?: string
+  thumbnailPrefs?: ThumbnailPrefs
   imageWarning?: string
 }

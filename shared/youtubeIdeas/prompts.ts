@@ -26,13 +26,17 @@ export function buildGenerateIdeasUserPrompt(req: GenerateIdeasRequest): string 
   const extra = req.additionalInstructions?.trim()
     ? `\nAdditional instructions from the host:\n${req.additionalInstructions.trim()}`
     : ''
+  const prior =
+    req.priorEpisodeTitles && req.priorEpisodeTitles.length > 0
+      ? `\nEpisodes already in this series (do NOT repeat the same angles or titles):\n${req.priorEpisodeTitles.map((t) => `- ${t}`).join('\n')}`
+      : ''
   return `Generate exactly ${req.count} podcast episode idea(s).
 
 Topic category: ${req.category}
 Philosophical inspiration lens: ${req.philosophicalInspiration}
 Region focus: ${req.region}
 Episode numbering starts at Part ${req.startPartNumber} (increment for each idea).
-Series title: ${req.seriesTitle ?? 'Ancient Philosophy, Modern Africa'}${extra}
+Series title: ${req.seriesTitle ?? 'Ancient Philosophy, Modern Africa'}${prior}${extra}
 
 JSON schema:
 {

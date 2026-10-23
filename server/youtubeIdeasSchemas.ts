@@ -80,4 +80,5 @@ export const generateIdeasRequestSchema = z.object({
   startPartNumber: z.number().int().min(1).max(9999),
   additionalInstructions: z.string().max(4000).optional(),
   seriesTitle: z.string().max(200).optional(),
+  priorEpisodeTitles: z.array(z.string().min(1).max(300)).max(40).optional(),
 })

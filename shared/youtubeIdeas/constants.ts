@@ -1,3 +1,14 @@
+export const EXCELLENT117_BRAND = 'Excellent117'
+
+/** Sidebar / tools hub name for the podcast research app (routes stay /tools/youtube-ideas). */
+export const RESEARCH_STUDIO_TITLE = 'Research Studio'
+
+export const RESEARCH_STUDIO_TAGLINE =
+  'Ancient Wisdom. Modern Africa. Questions Worth Exploring.'
+
+/** Default line on 1280×720 episode thumbnails */
+export const THUMBNAIL_DEFAULT_TAGLINE = 'Think Deeply · Speak Freely · Question Everything'
+
 export const TOPIC_CATEGORIES = [
   'African Leadership',
   'African Development',

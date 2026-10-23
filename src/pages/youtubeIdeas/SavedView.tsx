@@ -1,14 +1,22 @@
-import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
-import type { IdeaStatus } from '../../../shared/youtubeIdeas/types'
+import { useEffect, useMemo, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
+import { IDEA_STATUSES, type IdeaStatus } from '../../../shared/youtubeIdeas/types'
+import { SavedIdeasKanban } from '../../components/youtubeIdeas/SavedIdeasKanban'
 import { listSavedIdeas, updateIdeaStatus } from '../../lib/youtubeIdeas/store'
 
-const STATUSES: IdeaStatus[] = ['Idea', 'Researching', 'Script Ready', 'Recorded', 'Published']
-
 export function SavedView() {
+  const [searchParams] = useSearchParams()
   const [query, setQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<IdeaStatus | 'All'>('All')
+  const [view, setView] = useState<'list' | 'kanban'>('list')
   const [refresh, setRefresh] = useState(0)
+
+  useEffect(() => {
+    const status = searchParams.get('status')
+    if (status && (IDEA_STATUSES as readonly string[]).includes(status)) {
+      setStatusFilter(status as IdeaStatus)
+    }
+  }, [searchParams])
 
   const ideas = useMemo(() => {
     void refresh
@@ -28,9 +36,27 @@ export function SavedView() {
 
   return (
     <div className="space-y-6">
-      <header>
-        <h2 className="text-2xl font-semibold text-white">My Saved Ideas</h2>
-        <p className="mt-1 text-sm text-zinc-500">Tap an idea to open the full script on its own page.</p>
+      <header className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h2 className="text-2xl font-semibold text-white">My Saved Ideas</h2>
+          <p className="mt-1 text-sm text-zinc-500">Tap an idea to open the full script on its own page.</p>
+        </div>
+        <div className="flex rounded-lg border border-zinc-700 p-0.5 text-xs">
+          <button
+            type="button"
+            onClick={() => setView('list')}
+            className={`rounded-md px-3 py-1.5 ${view === 'list' ? 'bg-amber-500/20 text-amber-200' : 'text-zinc-400'}`}
+          >
+            List
+          </button>
+          <button
+            type="button"
+            onClick={() => setView('kanban')}
+            className={`rounded-md px-3 py-1.5 ${view === 'kanban' ? 'bg-amber-500/20 text-amber-200' : 'text-zinc-400'}`}
+          >
+            Kanban
+          </button>
+        </div>
       </header>
 
       <div className="flex flex-wrap gap-3">
@@ -47,7 +73,7 @@ export function SavedView() {
           className="rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm"
         >
           <option value="All">All statuses</option>
-          {STATUSES.map((s) => (
+          {IDEA_STATUSES.map((s) => (
             <option key={s} value={s}>
               {s}
             </option>
@@ -57,6 +83,8 @@ export function SavedView() {
 
       {ideas.length === 0 ? (
         <p className="text-sm text-zinc-500">No saved ideas match your filters.</p>
+      ) : view === 'kanban' ? (
+        <SavedIdeasKanban ideas={ideas} onChanged={() => setRefresh((n) => n + 1)} />
       ) : (
         <ul className="space-y-3">
           {ideas.map((idea) => (
@@ -87,12 +115,13 @@ export function SavedView() {
                     onClick={(e) => e.preventDefault()}
                     onChange={(e) => {
                       e.stopPropagation()
+                      e.preventDefault()
                       updateIdeaStatus(idea.id, e.target.value as IdeaStatus)
                       setRefresh((n) => n + 1)
                     }}
                     className="rounded-lg border border-zinc-700 bg-zinc-950 px-2 py-1 text-xs"
                   >
-                    {STATUSES.map((s) => (
+                    {IDEA_STATUSES.map((s) => (
                       <option key={s} value={s}>
                         {s}
                       </option>

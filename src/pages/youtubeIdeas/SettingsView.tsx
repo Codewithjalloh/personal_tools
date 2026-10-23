@@ -1,17 +1,28 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { apiConfigStatus } from '../../lib/youtubeIdeas/api'
+import {
+  buildBackup,
+  downloadBackupJson,
+  estimateResearchStudioStorageBytes,
+  formatBytes,
+  parseBackupJson,
+} from '../../lib/youtubeIdeas/backup'
 import {
   getStoredOpenAiKey,
   getStoredPexelsKey,
   setStoredOpenAiKey,
   setStoredPexelsKey,
 } from '../../lib/youtubeIdeas/secretsStorage'
+import { importResearchStudioBackup, listSavedIdeas, listSeries } from '../../lib/youtubeIdeas/store'
 
 export function SettingsView() {
   const [openAiKey, setOpenAiKey] = useState(() => getStoredOpenAiKey())
   const [pexelsKey, setPexelsKey] = useState(() => getStoredPexelsKey())
   const [saved, setSaved] = useState(false)
   const [status, setStatus] = useState<{ openai: boolean; pexels: boolean } | null>(null)
+  const [importError, setImportError] = useState<string | null>(null)
+  const fileRef = useRef<HTMLInputElement>(null)
+  const storageBytes = estimateResearchStudioStorageBytes()
 
   useEffect(() => {
     void apiConfigStatus().then(setStatus)
@@ -22,6 +33,27 @@ export function SettingsView() {
     setStoredPexelsKey(pexelsKey)
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
+  }
+
+  const exportBackup = () => {
+    downloadBackupJson(buildBackup(listSavedIdeas(), listSeries()))
+  }
+
+  const onImportFile = async (file: File) => {
+    setImportError(null)
+    try {
+      const text = await file.text()
+      const backup = parseBackupJson(text)
+      const mode = confirm(
+        'Merge with existing data? OK = merge, Cancel = replace all Research Studio data.',
+      )
+        ? 'merge'
+        : 'replace'
+      importResearchStudioBackup(backup, mode)
+      alert(`Imported ${backup.ideas.length} ideas and ${backup.series.length} series.`)
+    } catch (e) {
+      setImportError(e instanceof Error ? e.message : 'Import failed')
+    }
   }
 
   return (
@@ -73,6 +105,47 @@ export function SettingsView() {
           restart <code className="text-zinc-400">npm run dev</code> so <code className="text-zinc-400">PEXELS_API_KEY</code>{' '}
           from <code className="text-zinc-400">.env.local</code> is used.
         </p>
+      </section>
+
+      <section className="space-y-4 rounded-2xl border border-zinc-800 bg-zinc-900/50 p-6">
+        <h3 className="text-sm font-semibold text-amber-400/90">Data & backup</h3>
+        <p className="text-xs text-zinc-500">
+          Ideas and thumbnails are stored in this browser (~{formatBytes(storageBytes)}). Export regularly before clearing
+          site data.
+        </p>
+        {storageBytes > 4 * 1024 * 1024 && (
+          <p className="text-xs text-amber-200/80">
+            Storage is getting large. Export a backup and consider removing unused thumbnails.
+          </p>
+        )}
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={exportBackup}
+            className="rounded-lg border border-zinc-600 px-4 py-2 text-sm text-zinc-200 hover:border-amber-500/40"
+          >
+            Export JSON backup
+          </button>
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            className="rounded-lg border border-zinc-600 px-4 py-2 text-sm text-zinc-200 hover:border-amber-500/40"
+          >
+            Import backup
+          </button>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="application/json,.json"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0]
+              if (file) void onImportFile(file)
+              e.target.value = ''
+            }}
+          />
+        </div>
+        {importError && <p className="text-xs text-red-300">{importError}</p>}
       </section>
     </div>
   )

@@ -1,4 +1,9 @@
 import { NavLink, Outlet, Link } from 'react-router-dom'
+import {
+  EXCELLENT117_BRAND,
+  RESEARCH_STUDIO_TAGLINE,
+  RESEARCH_STUDIO_TITLE,
+} from '../../../shared/youtubeIdeas/constants'
 
 const nav = [
   { to: '/tools/youtube-ideas', end: true, label: 'Dashboard' },
@@ -19,11 +24,11 @@ export function YoutubeIdeasLayout() {
             <Link to="/" className="text-xs text-zinc-500 hover:text-zinc-300">
               ← Personal tools
             </Link>
-            <p className="mt-4 text-[10px] font-semibold uppercase tracking-[0.25em] text-amber-500">Excellent117</p>
-            <h1 className="mt-2 text-lg font-bold tracking-tight text-white">NEW YOUTUBE IDEAS</h1>
-            <p className="mt-2 text-xs leading-relaxed text-zinc-500">
-              Ancient Wisdom. Modern Africa. Questions Worth Exploring.
+            <p className="mt-4 text-[10px] font-semibold uppercase tracking-[0.25em] text-amber-500">
+              {EXCELLENT117_BRAND}
             </p>
+            <h1 className="mt-2 text-lg font-bold tracking-tight text-white">{RESEARCH_STUDIO_TITLE}</h1>
+            <p className="mt-2 text-xs leading-relaxed text-zinc-500">{RESEARCH_STUDIO_TAGLINE}</p>
           </div>
           <nav className="flex gap-1 overflow-x-auto px-3 pb-4 lg:flex-col lg:px-3">
             {nav.map((item) => (

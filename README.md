@@ -18,7 +18,17 @@ npm run dev
 
 Open the URL shown in the terminal (usually `http://localhost:5173`).
 
-**New YouTube Ideas** (`/tools/youtube-ideas`) calls server routes under `/api/*`. In dev, Vite serves those routes using keys from `.env.local`. On Vercel, set the same variables in the project dashboard.
+### Excellent117 Research Studio
+
+Routes: `/tools/youtube-ideas` (alias `/tools/research-studio`).
+
+Podcast research hub: generate episode ideas (OpenAI), Pexels reference images, YouTube pack, World Library, terminology, series tracking, saved scripts, thumbnail editor, and export to Slideshow → Video.
+
+- **Data** stays in your browser (`localStorage`) unless you export a JSON backup in Settings.
+- **API keys**: OpenAI (required), Pexels (optional). Dev: `.env.local`. Production: Vercel env vars or Research Studio → Settings (browser keys sent only to `/api/*` routes).
+- **Tests**: `npm test` (dashboard stats logic).
+
+Calls server routes under `/api/*`. In dev, Vite serves those routes using keys from `.env.local`. On Vercel, set the same variables in the project dashboard.
 
 ## Features
 

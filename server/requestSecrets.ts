@@ -45,7 +45,7 @@ export function resolveOpenAiKey(): string {
   const key = normalizeSecret(getEnv('OPENAI_API_KEY')) || normalizeSecret(storage.getStore()?.openAiKey)
   if (!key) {
     throw new Error(
-      'OPENAI_API_KEY is not configured. Add it in YouTube Ideas → Settings, or in .env.local at the project root.',
+      'OPENAI_API_KEY is not configured. Add it in Research Studio → Settings, or in .env.local at the project root.',
     )
   }
   return key

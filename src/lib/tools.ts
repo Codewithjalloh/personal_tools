@@ -1,3 +1,5 @@
+import { EXCELLENT117_BRAND, RESEARCH_STUDIO_TITLE } from '../../shared/youtubeIdeas/constants'
+
 export type ToolDefinition = {
   id: string
   title: string
@@ -11,9 +13,9 @@ export type ToolDefinition = {
 export const TOOLS: ToolDefinition[] = [
   {
     id: 'youtube-ideas',
-    title: 'New YouTube Ideas',
+    title: `${EXCELLENT117_BRAND} ${RESEARCH_STUDIO_TITLE}`,
     description:
-      'Excellent117 — AI podcast research: philosophy, African context, questions, scripts (OpenAI + Pexels).',
+      'Podcast research hub — episode ideas, World Library, terminology, scripts, and YouTube pack (OpenAI + Pexels).',
     path: '/tools/youtube-ideas',
     icon: '🎙️',
     available: true,

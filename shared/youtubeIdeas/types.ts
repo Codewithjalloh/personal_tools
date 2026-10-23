@@ -34,6 +34,35 @@ export type ImageAsset = {
   alt: string
 }
 
+export type ThumbnailFontId = 'system' | 'serif' | 'mono' | 'rounded' | 'condensed'
+
+export type ThumbnailTextAlign = 'left' | 'center' | 'right'
+
+/** Editable thumbnail layout (text + background); JPEG is stored separately on the idea. */
+export type ThumbnailPrefs = {
+  brandText: string
+  /** e.g. "PART 6" or "EPISODE 6" — fully editable. */
+  partLabel: string
+  headline: string
+  tagline: string
+  backgroundUrl?: string
+  /** Vertical crop focus when background is cover-scaled (0 = top, 1 = bottom). */
+  focalY: number
+  headlineFont: ThumbnailFontId
+  /** Brand, part label, and tagline. */
+  detailFont: ThumbnailFontId
+  brandColor: string
+  partLabelColor: string
+  headlineColor: string
+  taglineColor: string
+  accentColor: string
+  /** Brand line alignment */
+  brandAlign: ThumbnailTextAlign
+  partAlign: ThumbnailTextAlign
+  headlineAlign: ThumbnailTextAlign
+  taglineAlign: ThumbnailTextAlign
+}
+
 export const IDEA_STATUSES = [
   'Idea',
   'Researching',
@@ -60,10 +89,15 @@ export type SavedIdea = {
   playlistCategory?: string
   tags?: string[]
   thumbnailDataUrl?: string
+  thumbnailPrefs?: ThumbnailPrefs
   region?: string
   philosophicalInspiration?: string
   status: IdeaStatus
   seriesId?: string
+  /** Block ids highlighted in the script reader (session-persisted on the idea). */
+  textHighlightIds?: string[]
+  publishedYoutubeUrl?: string
+  publishedAt?: string
   createdAt: string
   updatedAt: string
 }
@@ -85,4 +119,6 @@ export type GenerateIdeasRequest = {
   startPartNumber: number
   additionalInstructions?: string
   seriesTitle?: string
+  /** Prior episode titles in the same series — avoids repeating themes. */
+  priorEpisodeTitles?: string[]
 }

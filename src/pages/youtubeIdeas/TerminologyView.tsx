@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { TERMINOLOGY } from '../../../shared/youtubeIdeas/terminology/catalog'
 import { TERM_CATEGORIES, type TermCategory } from '../../../shared/youtubeIdeas/terminology/types'
 import { normalizeSearchText } from '../../../shared/youtubeIdeas/worldFigures/filterFigures'
@@ -105,17 +105,27 @@ export function TerminologyView() {
                     For your podcast
                   </p>
                   <p className="mt-2 leading-relaxed text-zinc-400">{entry.explore}</p>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      void navigator.clipboard.writeText(
-                        `${entry.term}\n${entry.definition}\n\nPodcast angle: ${entry.explore}`,
-                      )
-                    }
-                    className="mt-4 rounded border border-zinc-600 px-2 py-1 text-[11px] text-zinc-300 hover:border-amber-500/40"
-                  >
-                    Copy term
-                  </button>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        void navigator.clipboard.writeText(
+                          `${entry.term}\n${entry.definition}\n\nPodcast angle: ${entry.explore}`,
+                        )
+                      }
+                      className="rounded border border-zinc-600 px-2 py-1 text-[11px] text-zinc-300 hover:border-amber-500/40"
+                    >
+                      Copy term
+                    </button>
+                    <Link
+                      to={`/tools/youtube-ideas/generate?instructions=${encodeURIComponent(
+                        `Episode idea that explains "${entry.term}" for a general audience. Definition: ${entry.definition} Podcast angle: ${entry.explore}`,
+                      )}`}
+                      className="rounded bg-amber-500/90 px-2 py-1 text-[11px] font-semibold text-black hover:bg-amber-400"
+                    >
+                      Start idea from this term
+                    </Link>
+                  </div>
                 </div>
               ) : null}
             </li>

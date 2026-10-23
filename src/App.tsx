@@ -1,4 +1,4 @@
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { ImageCompressPage } from './pages/ImageCompressPage'
 import { SlideshowVideoPage } from './pages/SlideshowVideoPage'
 import { ToolsHomePage } from './pages/ToolsHomePage'
@@ -13,10 +13,17 @@ import { PhilosophersView } from './pages/youtubeIdeas/PhilosophersView'
 import { PhilosopherDetailView } from './pages/youtubeIdeas/PhilosopherDetailView'
 import { TerminologyView } from './pages/youtubeIdeas/TerminologyView'
 
+function ResearchStudioAliasRedirect() {
+  const location = useLocation()
+  const target = location.pathname.replace(/^\/tools\/research-studio/, '/tools/youtube-ideas')
+  return <Navigate to={`${target}${location.search}${location.hash}`} replace />
+}
+
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/tools/research-studio/*" element={<ResearchStudioAliasRedirect />} />
         <Route path="/" element={<ToolsHomePage />} />
         <Route path="/tools/slideshow-video" element={<SlideshowVideoPage />} />
         <Route path="/tools/image-compress" element={<ImageCompressPage />} />

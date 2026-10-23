@@ -16,7 +16,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           error:
             e instanceof Error
               ? e.message
-              : 'OPENAI_API_KEY is not configured. Add it in Vercel project settings or YouTube Ideas → Settings.',
+              : 'OPENAI_API_KEY is not configured. Add it in Vercel project settings or Research Studio → Settings.',
         })
         return
       }

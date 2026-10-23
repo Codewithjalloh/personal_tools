@@ -1,13 +1,15 @@
 import { useState } from 'react'
-import type { SavedIdea } from '../../../shared/youtubeIdeas/types'
+import type { SavedIdea, ThumbnailPrefs } from '../../../shared/youtubeIdeas/types'
 import { downloadEpisodeImagesZip } from '../../lib/youtubeIdeas/downloadImagesZip'
-import { downloadDataUrl } from '../../lib/youtubeIdeas/thumbnail'
+import { saveIdea } from '../../lib/youtubeIdeas/store'
+import { ThumbnailEditor } from './ThumbnailEditor'
 
 type Props = {
   idea: SavedIdea
+  onUpdated?: () => void
 }
 
-export function SavedIdeaProductionPanel({ idea }: Props) {
+export function SavedIdeaProductionPanel({ idea, onUpdated }: Props) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -39,6 +41,15 @@ export function SavedIdeaProductionPanel({ idea }: Props) {
     } finally {
       setBusy(false)
     }
+  }
+
+  const persistThumbnail = (dataUrl: string | undefined, prefs: ThumbnailPrefs) => {
+    saveIdea({
+      ...idea,
+      thumbnailDataUrl: dataUrl,
+      thumbnailPrefs: prefs,
+    })
+    onUpdated?.()
   }
 
   return (
@@ -111,24 +122,17 @@ export function SavedIdeaProductionPanel({ idea }: Props) {
 
       <section className="border-b border-zinc-800 px-6 py-5">
         <h4 className="text-xs font-semibold uppercase tracking-widest text-amber-400">Thumbnail (1280×720)</h4>
-        {thumbnail ? (
-          <div className="mt-3 space-y-2">
-            <img
-              src={thumbnail}
-              alt="Episode thumbnail"
-              className="w-full max-w-xl rounded-lg border border-zinc-700 shadow-lg"
-            />
-            <button
-              type="button"
-              onClick={() => downloadDataUrl(thumbnail, `excellent117-part-${idea.partNumber}-thumb.jpg`)}
-              className="rounded-lg border border-zinc-600 px-3 py-1.5 text-xs text-zinc-200 hover:border-amber-500/40"
-            >
-              Download thumbnail
-            </button>
-          </div>
-        ) : (
-          <p className="mt-2 text-sm text-zinc-500">No thumbnail saved with this idea.</p>
-        )}
+        <div className="mt-4">
+          <ThumbnailEditor
+            partNumber={idea.partNumber}
+            defaultHeadline={youtubeTitle}
+            images={images}
+            thumbnailDataUrl={thumbnail}
+            thumbnailPrefs={idea.thumbnailPrefs}
+            onChange={persistThumbnail}
+          />
+        </div>
+        <p className="mt-3 text-[10px] text-zinc-600">Changes save automatically to this idea.</p>
       </section>
 
       <section className="px-4 py-5 sm:px-6">
@@ -152,16 +156,7 @@ export function SavedIdeaProductionPanel({ idea }: Props) {
             No reference images saved. Save again from Generate after Pexels loads images.
           </p>
         ) : (
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {images.map((img, i) => (
-              <figure key={`${img.url}-${i}`} className="overflow-hidden rounded-lg border border-zinc-800 bg-zinc-950">
-                <img src={img.url} alt={img.alt || `Reference ${i + 1}`} className="aspect-video w-full object-cover" />
-                <figcaption className="px-2 py-1.5 text-[10px] leading-snug text-zinc-500">
-                  {img.attribution ?? img.photographer ?? 'Pexels'}
-                </figcaption>
-              </figure>
-            ))}
-          </div>
+          <p className="text-xs text-zinc-500">Pick a background in the thumbnail editor above.</p>
         )}
       </section>
 

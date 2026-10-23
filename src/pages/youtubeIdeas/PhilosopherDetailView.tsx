@@ -1,4 +1,5 @@
 import { Link, Navigate, useParams } from 'react-router-dom'
+import { EXCELLENT117_BRAND } from '../../../shared/youtubeIdeas/constants'
 import { getWorldFigureById } from '../../../shared/youtubeIdeas/worldFigures'
 
 export function PhilosopherDetailView() {
@@ -51,13 +52,23 @@ export function PhilosopherDetailView() {
         </p>
       </header>
 
-      <button
-        type="button"
-        onClick={copyText}
-        className="rounded-lg border border-zinc-600 px-3 py-1.5 text-xs text-zinc-200 hover:border-amber-500/40"
-      >
-        Copy profile
-      </button>
+      <div className="flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={copyText}
+          className="rounded-lg border border-zinc-600 px-3 py-1.5 text-xs text-zinc-200 hover:border-amber-500/40"
+        >
+          Copy profile
+        </button>
+        <Link
+          to={`/tools/youtube-ideas/generate?instructions=${encodeURIComponent(
+            `Build an ${EXCELLENT117_BRAND} episode idea inspired by ${figure.name} (${figure.tradition}). Bio: ${figure.bio} Core themes: ${figure.themes.map((t) => t.title).join(', ')}.`,
+          )}`}
+          className="rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-semibold text-black hover:bg-amber-400"
+        >
+          Start idea from this profile
+        </Link>
+      </div>
 
       <article className="rounded-2xl border border-amber-500/25 bg-zinc-900/80 px-6 py-6 text-sm leading-relaxed text-zinc-300">
         <section className="mb-8">

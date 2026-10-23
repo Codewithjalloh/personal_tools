@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react'
-import type { EpisodeWithImages, ContentKind } from '../../lib/youtubeIdeas/api'
-import { apiGenerateAiThumbnail, apiGenerateContent, apiSearchImages } from '../../lib/youtubeIdeas/api'
+import { useState } from 'react'
+import type { EpisodeWithImages } from '../../lib/youtubeIdeas/api'
+import { apiGenerateAiThumbnail, apiSearchImages } from '../../lib/youtubeIdeas/api'
+import { IdeaResearchTools } from './IdeaResearchTools'
 import { downloadEpisodeImagesZip } from '../../lib/youtubeIdeas/downloadImagesZip'
-import { buildCanvasThumbnail, downloadDataUrl } from '../../lib/youtubeIdeas/thumbnail'
-import type { ImageAsset } from '../../../shared/youtubeIdeas/types'
+import type { ImageAsset, ThumbnailPrefs } from '../../../shared/youtubeIdeas/types'
+import { ThumbnailEditor } from './ThumbnailEditor'
 
 type Props = {
   episode: EpisodeWithImages
@@ -15,52 +16,15 @@ type Props = {
 export function IdeaCard({ episode, onSave, saved = false, onRegenerate }: Props) {
   const [images, setImages] = useState<ImageAsset[]>(episode.images)
   const [thumbnail, setThumbnail] = useState<string | undefined>(episode.thumbnailDataUrl)
+  const [thumbnailPrefs, setThumbnailPrefs] = useState<ThumbnailPrefs | undefined>(episode.thumbnailPrefs)
   const [busy, setBusy] = useState<string | null>(null)
-  const [auxContent, setAuxContent] = useState<string | null>(null)
-  const [auxTitle, setAuxTitle] = useState('')
-
-  useEffect(() => {
-    if (thumbnail || images.length === 0) return
-    void (async () => {
-      try {
-        const url = await buildCanvasThumbnail({
-          partNumber: episode.partNumber,
-          youtubeTitle: episode.youtubeTitle,
-          backgroundUrl: images[0]?.url,
-        })
-        setThumbnail(url)
-      } catch {
-        // ignore CORS on some hosts
-      }
-    })()
-  }, [images, episode.partNumber, episode.youtubeTitle, thumbnail])
-
+  const [downloadError, setDownloadError] = useState<string | null>(null)
   const snapshot = (): EpisodeWithImages => ({
     ...episode,
     images,
     thumbnailDataUrl: thumbnail,
+    thumbnailPrefs,
   })
-
-  const copyAll = async () => {
-    await navigator.clipboard.writeText(formatIdeaMarkdown(snapshot()))
-  }
-
-  const copyTags = async () => {
-    await navigator.clipboard.writeText(episode.tags.join(', '))
-  }
-
-  const runAux = async (kind: ContentKind, title: string) => {
-    setBusy(kind)
-    setAuxTitle(title)
-    try {
-      const content = await apiGenerateContent(kind, episode)
-      setAuxContent(content)
-    } catch (e) {
-      setAuxContent(e instanceof Error ? e.message : 'Failed')
-    } finally {
-      setBusy(null)
-    }
-  }
 
   const [imageWarning, setImageWarning] = useState(episode.imageWarning)
 
@@ -77,43 +41,12 @@ export function IdeaCard({ episode, onSave, saved = false, onRegenerate }: Props
     }
   }
 
-  const refreshCanvasThumb = async () => {
-    setBusy('thumb-canvas')
-    try {
-      const url = await buildCanvasThumbnail({
-        partNumber: episode.partNumber,
-        youtubeTitle: episode.youtubeTitle,
-        backgroundUrl: images[0]?.url,
-      })
-      setThumbnail(url)
-    } catch (e) {
-      setAuxContent(e instanceof Error ? e.message : 'Thumbnail failed')
-      setAuxTitle('Thumbnail')
-    } finally {
-      setBusy(null)
-    }
-  }
-
-  const aiThumbnail = async () => {
-    setBusy('thumb-ai')
-    try {
-      const url = await apiGenerateAiThumbnail(episode)
-      setThumbnail(url)
-    } catch (e) {
-      setAuxContent(e instanceof Error ? e.message : 'AI thumbnail failed')
-      setAuxTitle('AI Thumbnail')
-    } finally {
-      setBusy(null)
-    }
-  }
-
   const downloadZip = async () => {
     setBusy('zip')
     try {
       await downloadEpisodeImagesZip(episode.partNumber, episode.title, images, thumbnail)
     } catch (e) {
-      setAuxContent(e instanceof Error ? e.message : 'ZIP download failed')
-      setAuxTitle('Download')
+      setDownloadError(e instanceof Error ? e.message : 'ZIP download failed')
     } finally {
       setBusy(null)
     }
@@ -186,28 +119,22 @@ export function IdeaCard({ episode, onSave, saved = false, onRegenerate }: Props
       </section>
 
       <section className="border-b border-zinc-800 px-6 py-5">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <h4 className="text-xs font-semibold uppercase tracking-widest text-amber-400">Thumbnail (1280×720)</h4>
-          <div className="flex flex-wrap gap-2">
-            <ActionBtn onClick={refreshCanvasThumb} label="Rebuild (photo)" disabled={!!busy} />
-            <ActionBtn onClick={aiThumbnail} label="Generate AI" disabled={!!busy} />
-            {thumbnail && (
-              <ActionBtn
-                onClick={() => downloadDataUrl(thumbnail, `excellent117-part-${episode.partNumber}-thumb.jpg`)}
-                label="Download"
-              />
-            )}
-          </div>
-        </div>
-        {thumbnail ? (
-          <img
-            src={thumbnail}
-            alt="Episode thumbnail preview"
-            className="mt-3 w-full max-w-xl rounded-lg border border-zinc-700 shadow-lg"
+        <h4 className="text-xs font-semibold uppercase tracking-widest text-amber-400">Thumbnail (1280×720)</h4>
+        <div className="mt-4">
+          <ThumbnailEditor
+            partNumber={episode.partNumber}
+            defaultHeadline={episode.youtubeTitle}
+            images={images}
+            thumbnailDataUrl={thumbnail}
+            thumbnailPrefs={thumbnailPrefs}
+            disabled={!!busy}
+            onChange={(dataUrl, prefs) => {
+              setThumbnail(dataUrl)
+              setThumbnailPrefs(prefs)
+            }}
+            onAiGenerate={() => apiGenerateAiThumbnail(episode)}
           />
-        ) : (
-          <p className="mt-2 text-sm text-zinc-500">Thumbnail builds when images load, or use the buttons above.</p>
-        )}
+        </div>
       </section>
 
       <div className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -285,58 +212,47 @@ export function IdeaCard({ episode, onSave, saved = false, onRegenerate }: Props
         </section>
       </div>
 
-      <footer className="flex flex-wrap gap-2 border-t border-zinc-800 bg-zinc-950/80 px-4 py-4">
-        {!saved && <ActionBtn onClick={handleSave} label="Save" primary />}
-        {onRegenerate && <ActionBtn onClick={onRegenerate} label="Regenerate" disabled={!!busy} />}
-        <ActionBtn onClick={() => runAux('expand-topic', 'Expanded research')} label="Expand Topic" disabled={!!busy} />
-        <ActionBtn onClick={() => runAux('script', 'Full script')} label="Full Script" disabled={!!busy} />
-        <ActionBtn onClick={copyTags} label="Copy Tags" />
-        <ActionBtn onClick={copyAll} label="Copy All" />
-        <ActionBtn onClick={replaceImages} label="Refresh 7 Images" disabled={!!busy} />
-        <ActionBtn onClick={() => window.print()} label="Export PDF" />
-      </footer>
-
-      {(busy || auxContent) && (
-        <div className="border-t border-zinc-800 bg-zinc-950 px-6 py-4">
-          {busy && <p className="text-sm text-amber-300/80">Working on {busy}…</p>}
-          {auxContent && (
-            <div className="mt-2">
-              <p className="text-xs uppercase tracking-widest text-zinc-500">{auxTitle}</p>
-              <pre className="mt-2 max-h-96 overflow-auto whitespace-pre-wrap rounded-xl bg-black/40 p-4 text-xs text-zinc-300">
-                {auxContent}
-              </pre>
-            </div>
-          )}
-        </div>
+      {downloadError && (
+        <p className="border-t border-zinc-800 px-6 py-2 text-xs text-red-300">{downloadError}</p>
       )}
-    </article>
-  )
-}
 
-function ActionBtn({
-  label,
-  onClick,
-  disabled,
-  primary,
-}: {
-  label: string
-  onClick: () => void
-  disabled?: boolean
-  primary?: boolean
-}) {
-  return (
-    <button
-      type="button"
-      disabled={disabled}
-      onClick={onClick}
-      className={
-        primary
-          ? 'rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-semibold text-black hover:bg-amber-400 disabled:opacity-50'
-          : 'rounded-lg border border-zinc-700 px-3 py-1.5 text-xs text-zinc-200 hover:border-amber-500/40 disabled:opacity-50'
-      }
-    >
-      {label}
-    </button>
+      <IdeaResearchTools
+        episode={episode}
+        images={images}
+        thumbnailDataUrl={thumbnail}
+        extraActions={
+          <>
+            {!saved && (
+              <button
+                type="button"
+                onClick={handleSave}
+                className="rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-semibold text-black hover:bg-amber-400"
+              >
+                Save
+              </button>
+            )}
+            {onRegenerate && (
+              <button
+                type="button"
+                disabled={!!busy}
+                onClick={onRegenerate}
+                className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs text-zinc-200 hover:border-amber-500/40 disabled:opacity-50"
+              >
+                Regenerate
+              </button>
+            )}
+            <button
+              type="button"
+              disabled={!!busy}
+              onClick={() => void replaceImages()}
+              className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs text-zinc-200 hover:border-amber-500/40 disabled:opacity-50"
+            >
+              Refresh 7 Images
+            </button>
+          </>
+        }
+      />
+    </article>
   )
 }
 

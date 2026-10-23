@@ -32,6 +32,7 @@ import {
 } from '../lib/timeline'
 import type { ExportPhase, ExportSettings, FitMode, TitleCardSettings, TransitionType } from '../types'
 import { DEFAULT_MUSIC, DEFAULT_TITLE_CARD } from '../types'
+import { fetchSlideshowImportFiles } from '../lib/youtubeIdeas/applySlideshowImport'
 
 const DURATION_PRESETS = [
   { label: '15 sec', value: 15 },
@@ -89,6 +90,21 @@ export function SlideshowVideoPage() {
   const [exportFileName, setExportFileName] = useState('slideshow')
   const [musicFile, setMusicFile] = useState<File | null>(null)
   const [templateId, setTemplateId] = useState<TemplateId>('custom')
+  const [importNotice, setImportNotice] = useState<string | null>(null)
+
+  useEffect(() => {
+    void fetchSlideshowImportFiles().then((result) => {
+      if (!result) return
+      void addFiles(result.files).then(() => {
+        setIntro((prev) => ({
+          ...prev,
+          text: result.introTitle,
+          enabled: true,
+        }))
+        setImportNotice(`Loaded ${result.files.length} image(s) from Research Studio.`)
+      })
+    })
+  }, [addFiles])
 
   const handleRestore = useCallback(
     ({
@@ -355,6 +371,12 @@ export function SlideshowVideoPage() {
         title="Image Slideshow → Video"
         description="Upload photos, add intro/outro titles, optional music, then export — all in your browser."
       />
+
+      {importNotice && (
+        <p className="mb-4 rounded-lg border border-amber-500/30 bg-amber-950/30 px-4 py-2 text-sm text-amber-100/90">
+          {importNotice}
+        </p>
+      )}
 
       <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
         <div className="space-y-6">
