@@ -1,7 +1,11 @@
 import { FFmpeg } from '@ffmpeg/ffmpeg'
 import { fetchFile } from '@ffmpeg/util'
 import type { ExportProgress, ExportSettings, SlideItem } from '../types'
-import { renderSlideWithTitle } from './drawTitleText'
+import {
+  INTRO_EXPORT_FPS,
+  renderSlideWithTitle,
+  renderTitleAnimationFrames,
+} from './drawTitleText'
 import { buildVideoFilterChain } from './ffmpegFilters'
 import { fileToPngBytes } from './fileToPng'
 import { buildTimeline, validateTimeline } from './timeline'
@@ -9,6 +13,32 @@ import { buildTimeline, validateTimeline } from './timeline'
 let ffmpeg: FFmpeg | null = null
 let loadPromise: Promise<FFmpeg> | null = null
 let lastLogs: string[] = []
+
+export type ExportOverrides = {
+  width?: number
+  height?: number
+  totalDurationSec?: number
+  fastDraft?: boolean
+}
+
+type ExportSegment = {
+  duration: number
+  files: { name: string; bytes: Uint8Array }[]
+  mode: 'loop' | 'sequence'
+  fps?: number
+  sequencePattern?: string
+}
+
+function applyOverrides(settings: ExportSettings, overrides?: ExportOverrides): ExportSettings {
+  if (!overrides) return settings
+  return {
+    ...settings,
+    width: overrides.width ?? settings.width,
+    height: overrides.height ?? settings.height,
+    totalDurationSec: overrides.totalDurationSec ?? settings.totalDurationSec,
+    fastDraft: overrides.fastDraft ?? settings.fastDraft,
+  }
+}
 
 async function getFfmpeg(onLoadProgress?: (ratio: number) => void): Promise<FFmpeg> {
   if (ffmpeg?.loaded) return ffmpeg
@@ -56,66 +86,111 @@ function report(onProgress: (p: ExportProgress) => void, phase: ExportProgress['
   onProgress({ phase, progress: Math.min(1, Math.max(0, progress)) })
 }
 
+async function buildTitleSegment(
+  imageUrl: string,
+  card: ExportSettings['intro'],
+  w: number,
+  h: number,
+  fit: ExportSettings['fit'],
+  duration: number,
+  framePrefix: string,
+): Promise<ExportSegment> {
+  if (card.animation !== 'none') {
+    const frames = await renderTitleAnimationFrames(
+      imageUrl,
+      card,
+      w,
+      h,
+      fit,
+      duration,
+      framePrefix,
+    )
+    return {
+      duration,
+      files: frames.map(({ name, bytes }) => ({ name, bytes })),
+      mode: 'sequence',
+      fps: INTRO_EXPORT_FPS,
+      sequencePattern: `${framePrefix}_%04d.png`,
+    }
+  }
+  const blob = await renderSlideWithTitle(imageUrl, card, w, h, fit)
+  return {
+    duration,
+    files: [{ name: `${framePrefix}_static.png`, bytes: new Uint8Array(await blob.arrayBuffer()) }],
+    mode: 'loop',
+  }
+}
+
 export async function exportSlideshowVideo(
   slides: SlideItem[],
   settings: ExportSettings,
   onProgress: (p: ExportProgress) => void,
+  overrides?: ExportOverrides,
 ): Promise<Blob> {
-  const validation = validateTimeline(slides, settings.totalDurationSec, settings.intro, settings.outro)
+  const effective = applyOverrides(settings, overrides)
+  const validation = validateTimeline(
+    slides,
+    effective.totalDurationSec,
+    effective.intro,
+    effective.outro,
+  )
   if (!validation.ok) throw new Error(validation.message)
 
-  const isMp4 = settings.format === 'mp4'
+  const isMp4 = effective.format === 'mp4'
   const outFile = isMp4 ? 'output.mp4' : 'output.webm'
   const mime = isMp4 ? 'video/mp4' : 'video/webm'
-  const w = settings.width
-  const h = settings.height
+  const w = effective.width
+  const h = effective.height
 
   report(onProgress, 'loading-encoder', 0.02)
   const ff = await getFfmpeg((p) => report(onProgress, 'loading-encoder', 0.02 + p * 0.18))
 
   report(onProgress, 'preparing', 0.22)
-  const timeline = buildTimeline(slides, settings.totalDurationSec, settings.intro, settings.outro)
+  const timeline = buildTimeline(
+    slides,
+    effective.totalDurationSec,
+    effective.intro,
+    effective.outro,
+  )
   const pngs = await Promise.all(slides.map((s) => fileToPngBytes(s.file)))
 
-  const segments: { name: string; duration: number; bytes: Uint8Array }[] = []
+  const segments: ExportSegment[] = []
 
   for (const seg of timeline) {
     if (seg.kind === 'intro') {
-      const blob = await renderSlideWithTitle(
-        slides[0].url,
-        settings.intro,
-        w,
-        h,
-        settings.fit,
+      segments.push(
+        await buildTitleSegment(
+          slides[0].url,
+          effective.intro,
+          w,
+          h,
+          effective.fit,
+          seg.duration,
+          'intro',
+        ),
       )
-      segments.push({
-        name: 'intro.png',
-        duration: seg.duration,
-        bytes: new Uint8Array(await blob.arrayBuffer()),
-      })
     } else if (seg.kind === 'outro') {
-      const blob = await renderSlideWithTitle(
-        slides[seg.slideIndex].url,
-        settings.outro,
-        w,
-        h,
-        settings.fit,
+      segments.push(
+        await buildTitleSegment(
+          slides[seg.slideIndex].url,
+          effective.outro,
+          w,
+          h,
+          effective.fit,
+          seg.duration,
+          'outro',
+        ),
       )
-      segments.push({
-        name: 'outro.png',
-        duration: seg.duration,
-        bytes: new Uint8Array(await blob.arrayBuffer()),
-      })
     } else {
       segments.push({
-        name: `slide_${seg.slideIndex}_${segments.length}.png`,
         duration: seg.duration,
-        bytes: pngs[seg.slideIndex],
+        files: [{ name: `slide_${seg.slideIndex}_${segments.length}.png`, bytes: pngs[seg.slideIndex] }],
+        mode: 'loop',
       })
     }
   }
 
-  const cf = settings.crossfadeSec
+  const cf = effective.crossfadeSec
   const segmentDurations = segments.map((s, i) =>
     cf > 0 && i < segments.length - 1 ? s.duration + cf : s.duration,
   )
@@ -124,57 +199,57 @@ export async function exportSlideshowVideo(
 
   const args: string[] = []
   for (const seg of segments) {
-    await ff.writeFile(seg.name, seg.bytes)
-    args.push('-loop', '1', '-t', seg.duration.toFixed(4), '-i', seg.name)
+    for (const file of seg.files) {
+      await ff.writeFile(file.name, file.bytes)
+    }
+    if (seg.mode === 'sequence') {
+      args.push('-framerate', String(seg.fps ?? INTRO_EXPORT_FPS), '-i', seg.sequencePattern!)
+    } else {
+      args.push('-loop', '1', '-t', seg.duration.toFixed(4), '-i', seg.files[0].name)
+    }
   }
 
   let musicInputIndex: number | null = null
-  if (settings.musicFile) {
+  if (effective.musicFile) {
     musicInputIndex = segments.length
-    await ff.writeFile('music_audio', await fetchFile(settings.musicFile))
+    await ff.writeFile('music_audio', await fetchFile(effective.musicFile))
     args.push('-i', 'music_audio')
   }
 
-  const { filterComplex, outputLabel } = buildVideoFilterChain(
-    settings,
+  const { filterComplex: videoFilter, outputLabel } = buildVideoFilterChain(
+    effective,
     segments.length,
     segmentDurations,
   )
+
+  let filterComplex = videoFilter
+  let audioMap: string | null = null
+
+  if (musicInputIndex != null) {
+    const { volume, fadeInSec, fadeOutSec } = effective.music
+    const fadeOutStart = Math.max(0, effective.totalDurationSec - fadeOutSec)
+    filterComplex += `;[${musicInputIndex}:a]volume=${volume.toFixed(2)},afade=t=in:st=0:d=${fadeInSec.toFixed(2)},afade=t=out:st=${fadeOutStart.toFixed(2)}:d=${fadeOutSec.toFixed(2)}[aout]`
+    audioMap = '[aout]'
+  }
 
   ff.on('progress', ({ progress }) => {
     report(onProgress, 'encoding', 0.3 + progress * 0.68)
   })
 
-  const videoEncode = settings.fastDraft
+  const videoEncode = effective.fastDraft
     ? ['-c:v', 'libx264', '-preset', 'ultrafast', '-crf', '28', '-pix_fmt', 'yuv420p']
     : isMp4
       ? ['-c:v', 'libx264', '-preset', 'ultrafast', '-pix_fmt', 'yuv420p', '-movflags', '+faststart']
       : ['-c:v', 'libvpx', '-deadline', 'realtime', '-cpu-used', '8', '-b:v', '2M']
 
-  const execArgs = [
-    ...args,
-    '-filter_complex',
-    filterComplex,
-    '-map',
-    outputLabel,
-  ]
+  const execArgs = [...args, '-filter_complex', filterComplex, '-map', outputLabel]
 
-  if (musicInputIndex != null) {
-    execArgs.push(
-      '-map',
-      `${musicInputIndex}:a`,
-      '-c:a',
-      isMp4 ? 'aac' : 'libopus',
-      '-b:a',
-      '128k',
-      '-t',
-      String(settings.totalDurationSec),
-      '-shortest',
-    )
+  if (audioMap) {
+    execArgs.push('-map', audioMap, '-c:a', isMp4 ? 'aac' : 'libopus', '-b:a', '128k', '-shortest')
   }
 
   const videoEncodeFinal =
-    settings.fastDraft && !isMp4
+    effective.fastDraft && !isMp4
       ? ['-c:v', 'libx264', '-preset', 'ultrafast', '-crf', '28', '-pix_fmt', 'yuv420p']
       : videoEncode
 
@@ -198,9 +273,11 @@ export async function exportSlideshowVideo(
   report(onProgress, 'encoding', 1)
 
   for (const seg of segments) {
-    await ff.deleteFile(seg.name)
+    for (const file of seg.files) {
+      await ff.deleteFile(file.name)
+    }
   }
-  if (settings.musicFile) await ff.deleteFile('music_audio')
+  if (effective.musicFile) await ff.deleteFile('music_audio')
   await ff.deleteFile(outFile)
 
   const bytes = new Uint8Array(data as Uint8Array)

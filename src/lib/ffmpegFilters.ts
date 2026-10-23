@@ -1,4 +1,5 @@
 import type { ExportSettings } from '../types'
+import { xfadeTransition } from './transitions'
 
 const FPS = 30
 
@@ -57,7 +58,8 @@ export function buildVideoFilterChain(
   for (let i = 1; i < segmentCount; i++) {
     const offset = Math.max(0, running - cf)
     const nextOut = i === segmentCount - 1 ? '[outv]' : `[x${i}]`
-    scaled.push(`${prev}${streamLabels[i]}xfade=transition=fade:duration=${cf.toFixed(3)}:offset=${offset.toFixed(3)}${nextOut}`)
+    const transition = xfadeTransition(settings.transitionType)
+    scaled.push(`${prev}${streamLabels[i]}xfade=transition=${transition}:duration=${cf.toFixed(3)}:offset=${offset.toFixed(3)}${nextOut}`)
     prev = nextOut
     running = running + segmentDurations[i] - cf
   }

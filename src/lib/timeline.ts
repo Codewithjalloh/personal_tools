@@ -71,8 +71,8 @@ export function getFrameAtTime(
   totalDurationSec: number,
   intro: TitleCardSettings,
   outro: TitleCardSettings,
-): { slideIndex: number; overlay: 'intro' | 'outro' | null } {
-  if (slides.length === 0) return { slideIndex: 0, overlay: null }
+): { slideIndex: number; overlay: 'intro' | 'outro' | null; segmentElapsed: number } {
+  if (slides.length === 0) return { slideIndex: 0, overlay: null, segmentElapsed: 0 }
 
   const clampedT = ((t % totalDurationSec) + totalDurationSec) % totalDurationSec
   const segments = buildTimeline(slides, totalDurationSec, intro, outro)
@@ -80,15 +80,20 @@ export function getFrameAtTime(
 
   for (const seg of segments) {
     if (clampedT < elapsed + seg.duration) {
-      if (seg.kind === 'intro') return { slideIndex: 0, overlay: 'intro' }
-      if (seg.kind === 'outro') return { slideIndex: seg.slideIndex, overlay: 'outro' }
-      return { slideIndex: seg.slideIndex, overlay: null }
+      const segmentElapsed = clampedT - elapsed
+      if (seg.kind === 'intro') return { slideIndex: 0, overlay: 'intro', segmentElapsed }
+      if (seg.kind === 'outro') return { slideIndex: seg.slideIndex, overlay: 'outro', segmentElapsed }
+      return { slideIndex: seg.slideIndex, overlay: null, segmentElapsed }
     }
     elapsed += seg.duration
   }
 
   const last = slides.length - 1
-  return { slideIndex: last, overlay: titleDurationSec(outro) > 0 ? 'outro' : null }
+  return {
+    slideIndex: last,
+    overlay: titleDurationSec(outro) > 0 ? 'outro' : null,
+    segmentElapsed: 0,
+  }
 }
 
 export type TimelineValidation = { ok: true } | { ok: false; message: string }

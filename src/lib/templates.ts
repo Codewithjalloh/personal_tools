@@ -38,6 +38,7 @@ export const TEMPLATES: TemplateApply[] = [
       durationSec: 5,
       position: 'center',
       showBar: true,
+      animation: 'fade-up',
     },
     outro: { text: 'Thanks for watching', durationSec: 3, showBar: true },
     crossfadeSec: 0.35,

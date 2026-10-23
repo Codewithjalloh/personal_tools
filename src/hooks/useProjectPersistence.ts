@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import type { FitMode, SlideItem, TitleCardSettings } from '../types'
+import type { FitMode, MusicSettings, SlideItem, TitleCardSettings, TransitionType } from '../types'
 import {
   defaultStoredProject,
   loadMusicFromStore,
@@ -19,7 +19,9 @@ type Args = {
   intro: TitleCardSettings
   outro: TitleCardSettings
   crossfadeSec: number
+  transitionType: TransitionType
   kenBurns: boolean
+  music: MusicSettings
   exportFileName: string
   templateId: string
   onRestore: (payload: {
@@ -59,7 +61,9 @@ export function useProjectPersistence(args: Args) {
         intro: args.intro,
         outro: args.outro,
         crossfadeSec: args.crossfadeSec,
+        transitionType: args.transitionType,
         kenBurns: args.kenBurns,
+        music: args.music,
         exportFileName: args.exportFileName,
         templateId: args.templateId,
         slides: args.slides.map((s) => ({
@@ -83,7 +87,9 @@ export function useProjectPersistence(args: Args) {
     args.intro,
     args.outro,
     args.crossfadeSec,
+    args.transitionType,
     args.kenBurns,
+    args.music,
     args.exportFileName,
     args.templateId,
   ])

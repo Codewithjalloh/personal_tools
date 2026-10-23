@@ -1,5 +1,5 @@
-import type { FitMode, SlideItem, TitleCardSettings } from '../types'
-import { DEFAULT_TITLE_CARD } from '../types'
+import type { FitMode, MusicSettings, SlideItem, TitleCardSettings, TransitionType } from '../types'
+import { DEFAULT_MUSIC, DEFAULT_TITLE_CARD } from '../types'
 
 const DB_NAME = 'ImageSliderVideo'
 const STORE = 'files'
@@ -21,7 +21,9 @@ export type StoredProject = {
   intro: TitleCardSettings
   outro: TitleCardSettings
   crossfadeSec: number
+  transitionType: TransitionType
   kenBurns: boolean
+  music: MusicSettings
   exportFileName: string
   templateId: string
   slides: StoredSlideMeta[]
@@ -134,7 +136,9 @@ export function defaultStoredProject(): StoredProject {
     intro: { ...DEFAULT_TITLE_CARD },
     outro: { ...DEFAULT_TITLE_CARD },
     crossfadeSec: 0.4,
+    transitionType: 'fade',
     kenBurns: false,
+    music: { ...DEFAULT_MUSIC },
     exportFileName: 'slideshow',
     templateId: 'custom',
     slides: [],

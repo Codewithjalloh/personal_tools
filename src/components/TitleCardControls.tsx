@@ -1,3 +1,5 @@
+import { TITLE_FONTS } from '../lib/fonts'
+import { TEXT_ANIMATION_OPTIONS } from '../lib/textAnimation'
 import type { TitleCardSettings, TextPosition } from '../types'
 
 const COLOR_PRESETS = ['#ffffff', '#fbbf24', '#f472b6', '#38bdf8', '#4ade80', '#000000']
@@ -30,6 +32,40 @@ export function TitleCardControls({ label, card, onChange, disabled }: Props) {
       />
       {hasText && (
         <>
+          <div>
+            <p className="mb-1 text-xs text-zinc-500">Text animation</p>
+            <select
+              disabled={disabled}
+              value={card.animation}
+              onChange={(e) =>
+                onChange({ ...card, animation: e.target.value as TitleCardSettings['animation'] })
+              }
+              className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm"
+            >
+              {TEXT_ANIMATION_OPTIONS.map((o) => (
+                <option key={o.id} value={o.id}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <p className="mb-1 text-xs text-zinc-500">Font</p>
+            <select
+              disabled={disabled}
+              value={card.fontId}
+              onChange={(e) =>
+                onChange({ ...card, fontId: e.target.value as TitleCardSettings['fontId'] })
+              }
+              className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm"
+            >
+              {TITLE_FONTS.map((f) => (
+                <option key={f.id} value={f.id}>
+                  {f.label}
+                </option>
+              ))}
+            </select>
+          </div>
           <label className="block text-xs text-zinc-500">
             Duration (seconds)
             <input

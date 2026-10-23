@@ -1,0 +1,16 @@
+{
+  "name": "Personal Tools",
+  "short_name": "Tools",
+  "description": "Browser utilities: slideshow video, image compress, and more.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#09090b",
+  "theme_color": "#7c3aed",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

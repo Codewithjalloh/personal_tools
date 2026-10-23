@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { FitMode, SlideItem, TitleCardSettings } from '../types'
+import { fontStackForId } from '../lib/fonts'
+import { animProgressAtTime, getAnimState } from '../lib/textAnimation'
 import { computeSlideDurations, getFrameAtTime } from '../lib/timeline'
 
 type Props = {
@@ -17,10 +19,29 @@ function overlayPositionClass(position: TitleCardSettings['position']) {
   return 'items-center'
 }
 
-function TitleOverlay({ card }: { card: TitleCardSettings }) {
+function TitleOverlay({
+  card,
+  segmentElapsed,
+  animate,
+}: {
+  card: TitleCardSettings
+  segmentElapsed: number
+  animate: boolean
+}) {
   const text = card.text.trim()
   if (!text) return null
+
   const fontSize = `clamp(1rem, ${3.5 * card.fontScale}vw, ${2.5 * card.fontScale}rem)`
+  const progress = animate
+    ? animProgressAtTime(card.animation, segmentElapsed, card.durationSec)
+    : 1
+  const anim = getAnimState(card.animation, progress)
+  const shown =
+    card.animation === 'typewriter' && animate
+      ? text.slice(0, Math.max(0, Math.floor(text.length * anim.visibleRatio)))
+      : text
+
+  if (!shown) return null
 
   return (
     <div
@@ -34,9 +55,12 @@ function TitleOverlay({ card }: { card: TitleCardSettings }) {
           color: card.color,
           fontSize,
           WebkitTextStroke: '1px rgba(0,0,0,0.35)',
+          fontFamily: fontStackForId(card.fontId),
+          opacity: animate ? anim.opacity : 1,
+          transform: animate ? `translateY(${anim.offsetY}px) scale(${anim.scale})` : undefined,
         }}
       >
-        {text}
+        {shown}
       </p>
     </div>
   )
@@ -53,12 +77,14 @@ export function SlidePreview({
   const [playbackT, setPlaybackT] = useState(0)
   const [manualIndex, setManualIndex] = useState(0)
   const [manualMode, setManualMode] = useState(false)
+  const [manualOverlayT, setManualOverlayT] = useState(0)
 
   useEffect(() => {
     setPlaybackT(0)
     setManualIndex(0)
     setManualMode(false)
-  }, [slides.length, totalDurationSec, intro.text, outro.text])
+    setManualOverlayT(0)
+  }, [slides.length, totalDurationSec, intro.text, outro.text, intro.animation, outro.animation])
 
   const avgSlide = useMemo(() => {
     if (slides.length === 0) return 0
@@ -72,10 +98,11 @@ export function SlidePreview({
       let overlay: 'intro' | 'outro' | null = null
       if (manualIndex === 0 && intro.text.trim()) overlay = 'intro'
       if (manualIndex === last && outro.text.trim()) overlay = 'outro'
-      return { slideIndex: manualIndex, overlay }
+      const segmentElapsed = overlay ? manualOverlayT : 0
+      return { slideIndex: manualIndex, overlay, segmentElapsed }
     }
     return getFrameAtTime(playbackT, slides, totalDurationSec, intro, outro)
-  }, [manualMode, manualIndex, playbackT, slides, totalDurationSec, intro, outro])
+  }, [manualMode, manualIndex, manualOverlayT, playbackT, slides, totalDurationSec, intro, outro])
 
   useEffect(() => {
     if (!autoplay || slides.length === 0 || manualMode) return
@@ -84,6 +111,19 @@ export function SlidePreview({
     }, 250)
     return () => clearInterval(id)
   }, [autoplay, slides.length, manualMode])
+
+  useEffect(() => {
+    if (!manualMode) return
+    const last = slides.length - 1
+    const onIntro = manualIndex === 0 && intro.text.trim() && intro.animation !== 'none'
+    const onOutro = manualIndex === last && outro.text.trim() && outro.animation !== 'none'
+    if (!onIntro && !onOutro) return
+    const cap = onIntro ? intro.durationSec : outro.durationSec
+    const id = window.setInterval(() => {
+      setManualOverlayT((t) => Math.min(t + 0.25, cap))
+    }, 250)
+    return () => clearInterval(id)
+  }, [manualMode, manualIndex, slides.length, intro, outro])
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -125,7 +165,16 @@ export function SlidePreview({
           alt={current.name}
           className={`h-full w-full ${objectFit}`}
         />
-        {overlayCard && <TitleOverlay card={overlayCard} />}
+        {overlayCard && (
+          <TitleOverlay
+            card={overlayCard}
+            segmentElapsed={frame.segmentElapsed}
+            animate={
+              (frame.overlay === 'intro' && intro.animation !== 'none') ||
+              (frame.overlay === 'outro' && outro.animation !== 'none')
+            }
+          />
+        )}
         <div className="absolute bottom-3 left-3 rounded-full bg-black/60 px-3 py-1 text-xs text-zinc-200 backdrop-blur">
           {frame.slideIndex + 1} / {slides.length}
           {frame.overlay === 'intro' && ` · intro ${intro.durationSec}s`}
@@ -152,6 +201,7 @@ export function SlidePreview({
           onClick={() => {
             setManualMode(false)
             setPlaybackT(0)
+            setManualOverlayT(0)
           }}
         >
           Restart preview

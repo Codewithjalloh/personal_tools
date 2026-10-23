@@ -1,6 +1,12 @@
-# Image Slideshow → Video
+# Personal Tools
 
-Browser-based slideshow editor: upload images, intro/outro titles, music, effects, and export MP4/WebM — no server upload required.
+A hub of small browser utilities. The first tool is **Image Slideshow → Video** (photos → timed MP4/WebM with intro, music, effects).
+
+## Add another tool
+
+1. Create a page in `src/pages/YourToolPage.tsx`
+2. Register it in `src/lib/tools.ts` (`available: true`, set `path`)
+3. Add a `<Route>` in `src/App.tsx`
 
 ## Run locally
 
