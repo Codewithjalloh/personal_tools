@@ -12,10 +12,13 @@ A hub of small browser utilities. The first tool is **Image Slideshow → Video*
 
 ```bash
 npm install
+cp .env.example .env.local   # add OPENAI_API_KEY (and optional PEXELS_API_KEY)
 npm run dev
 ```
 
 Open the URL shown in the terminal (usually `http://localhost:5173`).
+
+**New YouTube Ideas** (`/tools/youtube-ideas`) calls server routes under `/api/*`. In dev, Vite serves those routes using keys from `.env.local`. On Vercel, set the same variables in the project dashboard.
 
 ## Features
 
@@ -35,9 +38,10 @@ Open the URL shown in the terminal (usually `http://localhost:5173`).
 1. Push this repo to GitHub (`main`).
 2. In [Vercel](https://vercel.com/new), **Import** the repository.
 3. Leave defaults (Vite): **Build** `npm run build`, **Output** `dist`, **Install** `npm install`.
-4. Deploy. Each push to `main` triggers a new production deploy.
+4. Add environment variables: `OPENAI_API_KEY`, optional `OPENAI_MODEL`, optional `PEXELS_API_KEY`.
+5. Deploy. Each push to `main` triggers a new production deploy.
 
-`vercel.json` sets the Vite build and SPA rewrites. `postinstall` copies FFmpeg into `public/ffmpeg/` during install so exports work in production.
+`vercel.json` sets the Vite build, `/api` serverless functions, and SPA rewrites. `postinstall` copies FFmpeg into `public/ffmpeg/` during install so slideshow exports work in production.
 
 ### GitHub Pages
 

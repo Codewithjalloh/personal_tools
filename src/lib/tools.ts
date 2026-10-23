@@ -27,4 +27,14 @@ export const TOOLS: ToolDefinition[] = [
     available: true,
     tags: ['image', 'compress', 'zip', 'optimize'],
   },
+  {
+    id: 'youtube-ideas',
+    title: 'New YouTube Ideas',
+    description:
+      'Excellent117 — AI podcast research: philosophy, African context, questions, scripts (OpenAI + Pexels).',
+    path: '/tools/youtube-ideas',
+    icon: '🎙️',
+    available: true,
+    tags: ['youtube', 'podcast', 'openai', 'excellent117', 'ideas'],
+  },
 ]
