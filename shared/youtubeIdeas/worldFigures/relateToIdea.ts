@@ -60,7 +60,11 @@ function uniqueTokens(parts: string[]): Set<string> {
   return set
 }
 
-function ideaCorpus(idea: SavedIdea): { tokens: Set<string>; inspirationNorm: string } {
+export function buildIdeaCorpus(idea: SavedIdea): {
+  tokens: Set<string>
+  inspirationNorm: string
+  fullTextNorm: string
+} {
   const parts = [
     idea.title,
     idea.inspiration.name,
@@ -77,6 +81,7 @@ function ideaCorpus(idea: SavedIdea): { tokens: Set<string>; inspirationNorm: st
   return {
     tokens: uniqueTokens(parts),
     inspirationNorm: normalizeSearchText(idea.inspiration.name),
+    fullTextNorm: normalizeSearchText(parts.join(' ')),
   }
 }
 
@@ -124,7 +129,7 @@ function buildReason(
 }
 
 export function relateWorldFiguresToIdea(idea: SavedIdea, limit = 8): RelatedWorldFigure[] {
-  const { tokens: ideaTokens, inspirationNorm } = ideaCorpus(idea)
+  const { tokens: ideaTokens, inspirationNorm } = buildIdeaCorpus(idea)
   if (ideaTokens.size === 0 && !inspirationNorm) return []
 
   const scored: RelatedWorldFigure[] = []

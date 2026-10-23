@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
 import type { IdeaStatus } from '../../../shared/youtubeIdeas/types'
+import { SavedIdeaProductionPanel } from '../../components/youtubeIdeas/SavedIdeaProductionPanel'
 import { SavedIdeaTextPanel } from '../../components/youtubeIdeas/SavedIdeaTextPanel'
 import { SavedIdeaWorldLibrarySection } from '../../components/youtubeIdeas/SavedIdeaWorldLibrarySection'
 import { deleteIdea, getSavedIdeaById, updateIdeaStatus } from '../../lib/youtubeIdeas/store'
@@ -28,18 +29,13 @@ export function SavedIdeaDetailView() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 pb-16">
+    <div className="mx-auto max-w-6xl space-y-6 pb-16">
       <Link
         to="/tools/youtube-ideas/saved"
         className="inline-flex text-sm text-zinc-500 transition hover:text-amber-400/90"
       >
         ← Back to My Saved Ideas
       </Link>
-
-      <header>
-        <p className="text-xs font-semibold uppercase tracking-widest text-amber-500/90">Part {idea.partNumber}</p>
-        <h2 className="mt-2 text-2xl font-semibold leading-snug text-white">{idea.title}</h2>
-      </header>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <select
@@ -66,6 +62,8 @@ export function SavedIdeaDetailView() {
           Delete idea
         </button>
       </div>
+
+      <SavedIdeaProductionPanel idea={idea} />
 
       <SavedIdeaTextPanel idea={idea} />
 

@@ -5,6 +5,7 @@ const nav = [
   { to: '/tools/youtube-ideas/generate', label: 'Generate Ideas' },
   { to: '/tools/youtube-ideas/saved', label: 'My Saved Ideas' },
   { to: '/tools/youtube-ideas/philosophers', label: 'World Library' },
+  { to: '/tools/youtube-ideas/terminology', label: 'Terminology' },
   { to: '/tools/youtube-ideas/series', label: 'Episode Series' },
   { to: '/tools/youtube-ideas/settings', label: 'Settings' },
 ]

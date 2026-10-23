@@ -71,7 +71,15 @@ export function SavedView() {
                     <h3 className="mt-1 text-lg font-medium leading-snug text-white group-hover:text-amber-100">
                       {idea.title}
                     </h3>
+                    {idea.youtubeTitle && idea.youtubeTitle !== idea.title ? (
+                      <p className="mt-1 line-clamp-1 text-sm text-zinc-400">YT: {idea.youtubeTitle}</p>
+                    ) : null}
                     <p className="mt-1 text-sm text-zinc-500">{idea.inspiration.name}</p>
+                    <div className="mt-2 flex flex-wrap gap-2 text-[10px] text-zinc-600">
+                      {(idea.tags?.length ?? 0) > 0 && <span>{idea.tags!.length} tags</span>}
+                      {(idea.images?.length ?? 0) > 0 && <span>{idea.images.length} images</span>}
+                      {idea.thumbnailDataUrl ? <span>thumbnail</span> : null}
+                    </div>
                     <p className="mt-3 line-clamp-2 text-sm text-zinc-400">{idea.openingQuestion}</p>
                   </div>
                   <select

@@ -11,6 +11,7 @@ import { SeriesView } from './pages/youtubeIdeas/SeriesView'
 import { SettingsView } from './pages/youtubeIdeas/SettingsView'
 import { PhilosophersView } from './pages/youtubeIdeas/PhilosophersView'
 import { PhilosopherDetailView } from './pages/youtubeIdeas/PhilosopherDetailView'
+import { TerminologyView } from './pages/youtubeIdeas/TerminologyView'
 
 export default function App() {
   return (
@@ -26,6 +27,7 @@ export default function App() {
           <Route path="saved/:ideaId" element={<SavedIdeaDetailView />} />
           <Route path="philosophers" element={<PhilosophersView />} />
           <Route path="philosophers/:philosopherId" element={<PhilosopherDetailView />} />
+          <Route path="terminology" element={<TerminologyView />} />
           <Route path="series" element={<SeriesView />} />
           <Route path="settings" element={<SettingsView />} />
         </Route>
