@@ -30,15 +30,26 @@ Open the URL shown in the terminal (usually `http://localhost:5173`).
 
 ## Deploy
 
-Static hosting works (Vercel, Netlify, GitHub Pages with SPA fallback).
+### Vercel (Git)
+
+1. Push this repo to GitHub (`main`).
+2. In [Vercel](https://vercel.com/new), **Import** the repository.
+3. Leave defaults (Vite): **Build** `npm run build`, **Output** `dist`, **Install** `npm install`.
+4. Deploy. Each push to `main` triggers a new production deploy.
+
+`vercel.json` sets the Vite build and SPA rewrites. `postinstall` copies FFmpeg into `public/ffmpeg/` during install so exports work in production.
+
+### GitHub Pages
+
+The workflow in `.github/workflows/pages.yml` builds with `GITHUB_PAGES=true` for the `/personal_tools/` base path.
+
+### Manual
 
 ```bash
 npm run build
 ```
 
-Deploy the `dist/` folder. `vercel.json` includes SPA rewrites.
-
-**Note:** First visit loads ~30MB encoder assets from `/ffmpeg/`; ensure those files are deployed (from `public/ffmpeg`).
+Upload `dist/`. **Note:** First visit loads ~30MB encoder assets from `/ffmpeg/` (created on `npm install`, not committed to git).
 
 ## Privacy
 
