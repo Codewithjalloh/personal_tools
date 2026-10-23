@@ -10,6 +10,16 @@ export type ToolDefinition = {
 
 export const TOOLS: ToolDefinition[] = [
   {
+    id: 'youtube-ideas',
+    title: 'New YouTube Ideas',
+    description:
+      'Excellent117 — AI podcast research: philosophy, African context, questions, scripts (OpenAI + Pexels).',
+    path: '/tools/youtube-ideas',
+    icon: '🎙️',
+    available: true,
+    tags: ['youtube', 'podcast', 'openai', 'excellent117', 'ideas'],
+  },
+  {
     id: 'slideshow-video',
     title: 'Image Slideshow → Video',
     description: 'Turn photos into a timed MP4/WebM with intro, outro, music, and effects.',
@@ -26,15 +36,5 @@ export const TOOLS: ToolDefinition[] = [
     icon: '🗜️',
     available: true,
     tags: ['image', 'compress', 'zip', 'optimize'],
-  },
-  {
-    id: 'youtube-ideas',
-    title: 'New YouTube Ideas',
-    description:
-      'Excellent117 — AI podcast research: philosophy, African context, questions, scripts (OpenAI + Pexels).',
-    path: '/tools/youtube-ideas',
-    icon: '🎙️',
-    available: true,
-    tags: ['youtube', 'podcast', 'openai', 'excellent117', 'ideas'],
   },
 ]

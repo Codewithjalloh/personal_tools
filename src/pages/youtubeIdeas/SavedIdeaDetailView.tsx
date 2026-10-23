@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
 import type { IdeaStatus } from '../../../shared/youtubeIdeas/types'
 import { SavedIdeaTextPanel } from '../../components/youtubeIdeas/SavedIdeaTextPanel'
+import { SavedIdeaWorldLibrarySection } from '../../components/youtubeIdeas/SavedIdeaWorldLibrarySection'
 import { deleteIdea, getSavedIdeaById, updateIdeaStatus } from '../../lib/youtubeIdeas/store'
 
 const STATUSES: IdeaStatus[] = ['Idea', 'Researching', 'Script Ready', 'Recorded', 'Published']
@@ -67,6 +68,8 @@ export function SavedIdeaDetailView() {
       </div>
 
       <SavedIdeaTextPanel idea={idea} />
+
+      <SavedIdeaWorldLibrarySection idea={idea} />
     </div>
   )
 }

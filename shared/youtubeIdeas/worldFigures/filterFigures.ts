@@ -1,3 +1,4 @@
+import { figureMatchesRegion, regionSearchTerms } from './regionGroups'
 import type { FigureCategory, FigureEra, WorldFigure } from './types'
 
 export type FigureFilters = {
@@ -22,6 +23,7 @@ function figureHaystack(figure: WorldFigure): string {
       figure.id.replace(/-/g, ' '),
       figure.name,
       figure.region,
+      ...regionSearchTerms(figure.region),
       figure.tradition,
       figure.bio,
       figure.lifespan,
@@ -49,7 +51,7 @@ export function filterWorldFigures(
   let list = figures
 
   if (region !== 'All regions') {
-    list = list.filter((f) => f.region === region)
+    list = list.filter((f) => figureMatchesRegion(f.region, region))
   }
   if (category !== 'all') {
     list = list.filter((f) => f.category === category)

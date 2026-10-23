@@ -112,6 +112,7 @@ export function PhilosophersView() {
       <p className="text-xs text-zinc-500">
         Showing {filtered.length} of {ALL_WORLD_FIGURES.length} profiles
         {activeFilterCount > 0 ? ' (filtered)' : ''}
+        {region === 'Europe' ? ' — Europe includes Ancient Greece, Rome, and Modern European thinkers.' : ''}
       </p>
 
       <ul className="grid gap-3 sm:grid-cols-2">
