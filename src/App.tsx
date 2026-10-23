@@ -1,6 +1,8 @@
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { ImageCompressPage } from './pages/ImageCompressPage'
 import { LoopAudioPage } from './pages/LoopAudioPage'
+import { VideoLoopPage } from './pages/VideoLoopPage'
+import { SceneComposerPage } from './pages/SceneComposerPage'
 import { SlideshowVideoPage } from './pages/SlideshowVideoPage'
 import { ToolsHomePage } from './pages/ToolsHomePage'
 import { YoutubeIdeasLayout } from './pages/youtubeIdeas/YoutubeIdeasLayout'
@@ -30,6 +32,8 @@ export default function App() {
         <Route path="/" element={<ToolsHomePage />} />
         <Route path="/tools/slideshow-video" element={<SlideshowVideoPage />} />
         <Route path="/tools/loop-audio" element={<LoopAudioPage />} />
+        <Route path="/tools/video-loop" element={<VideoLoopPage />} />
+        <Route path="/tools/scene-composer" element={<SceneComposerPage />} />
         <Route path="/tools/image-compress" element={<ImageCompressPage />} />
         <Route path="/tools/youtube-ideas" element={<YoutubeIdeasLayout />}>
           <Route index element={<DashboardView />} />

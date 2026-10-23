@@ -31,6 +31,16 @@ export const TOOLS: ToolDefinition[] = [
     tags: ['video', 'photos', 'slideshow', 'export'],
   },
   {
+    id: 'scene-composer',
+    title: 'Scene composer',
+    description:
+      'Drag images and video on a timeline, add voice-over, place text on the canvas, and export one MP4.',
+    path: '/tools/scene-composer',
+    icon: '🎞️',
+    available: true,
+    tags: ['video', 'editor', 'audio', 'text', 'timeline', 'export'],
+  },
+  {
     id: 'loop-audio',
     title: 'Loop video + audio',
     description: 'Repeat a short video loop under a voice track — export MP4 at the length of your audio.',
@@ -38,6 +48,15 @@ export const TOOLS: ToolDefinition[] = [
     icon: '🔁',
     available: true,
     tags: ['video', 'audio', 'loop', 'youtube', 'podcast', 'export'],
+  },
+  {
+    id: 'video-loop',
+    title: 'Video loop builder',
+    description: 'Online image, upload, text, or video → 10 sec–1 min loop MP4. Preview, then download.',
+    path: '/tools/video-loop',
+    icon: '♾️',
+    available: true,
+    tags: ['video', 'loop', 'b-roll', 'export', 'preview'],
   },
   {
     id: 'image-compress',

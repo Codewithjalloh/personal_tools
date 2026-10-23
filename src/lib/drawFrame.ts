@@ -11,21 +11,22 @@ export function loadImageElement(url: string): Promise<HTMLImageElement> {
 
 export function drawImageOnCanvas(
   ctx: CanvasRenderingContext2D,
-  img: HTMLImageElement,
+  img: CanvasImageSource & { naturalWidth?: number; naturalHeight?: number; videoWidth?: number; videoHeight?: number },
   width: number,
   height: number,
   fit: FitMode,
 ) {
+  const srcW = img.naturalWidth ?? img.videoWidth ?? 0
+  const srcH = img.naturalHeight ?? img.videoHeight ?? 0
+  if (srcW <= 0 || srcH <= 0) return
   ctx.fillStyle = '#000000'
   ctx.fillRect(0, 0, width, height)
 
   const scale =
-    fit === 'cover'
-      ? Math.max(width / img.naturalWidth, height / img.naturalHeight)
-      : Math.min(width / img.naturalWidth, height / img.naturalHeight)
+    fit === 'cover' ? Math.max(width / srcW, height / srcH) : Math.min(width / srcW, height / srcH)
 
-  const drawW = img.naturalWidth * scale
-  const drawH = img.naturalHeight * scale
+  const drawW = srcW * scale
+  const drawH = srcH * scale
   const x = (width - drawW) / 2
   const y = (height - drawH) / 2
 
