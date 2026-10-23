@@ -31,6 +31,15 @@ export const TOOLS: ToolDefinition[] = [
     tags: ['video', 'photos', 'slideshow', 'export'],
   },
   {
+    id: 'loop-audio',
+    title: 'Loop video + audio',
+    description: 'Repeat a short video loop under a voice track — export MP4 at the length of your audio.',
+    path: '/tools/loop-audio',
+    icon: '🔁',
+    available: true,
+    tags: ['video', 'audio', 'loop', 'youtube', 'podcast', 'export'],
+  },
+  {
     id: 'image-compress',
     title: 'Image Compress',
     description: 'Reduce file size and dimensions for JPG/PNG — download as ZIP.',

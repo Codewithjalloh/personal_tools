@@ -1,5 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { ImageCompressPage } from './pages/ImageCompressPage'
+import { LoopAudioPage } from './pages/LoopAudioPage'
 import { SlideshowVideoPage } from './pages/SlideshowVideoPage'
 import { ToolsHomePage } from './pages/ToolsHomePage'
 import { YoutubeIdeasLayout } from './pages/youtubeIdeas/YoutubeIdeasLayout'
@@ -12,6 +13,8 @@ import { SettingsView } from './pages/youtubeIdeas/SettingsView'
 import { PhilosophersView } from './pages/youtubeIdeas/PhilosophersView'
 import { PhilosopherDetailView } from './pages/youtubeIdeas/PhilosopherDetailView'
 import { TerminologyView } from './pages/youtubeIdeas/TerminologyView'
+import { GreatAfricanGlobalView } from './pages/youtubeIdeas/GreatAfricanGlobalView'
+import { GreatAfricanGlobalDetailView } from './pages/youtubeIdeas/GreatAfricanGlobalDetailView'
 
 function ResearchStudioAliasRedirect() {
   const location = useLocation()
@@ -26,6 +29,7 @@ export default function App() {
         <Route path="/tools/research-studio/*" element={<ResearchStudioAliasRedirect />} />
         <Route path="/" element={<ToolsHomePage />} />
         <Route path="/tools/slideshow-video" element={<SlideshowVideoPage />} />
+        <Route path="/tools/loop-audio" element={<LoopAudioPage />} />
         <Route path="/tools/image-compress" element={<ImageCompressPage />} />
         <Route path="/tools/youtube-ideas" element={<YoutubeIdeasLayout />}>
           <Route index element={<DashboardView />} />
@@ -34,6 +38,8 @@ export default function App() {
           <Route path="saved/:ideaId" element={<SavedIdeaDetailView />} />
           <Route path="philosophers" element={<PhilosophersView />} />
           <Route path="philosophers/:philosopherId" element={<PhilosopherDetailView />} />
+          <Route path="great-african-global" element={<GreatAfricanGlobalView />} />
+          <Route path="great-african-global/:profileId" element={<GreatAfricanGlobalDetailView />} />
           <Route path="terminology" element={<TerminologyView />} />
           <Route path="series" element={<SeriesView />} />
           <Route path="settings" element={<SettingsView />} />

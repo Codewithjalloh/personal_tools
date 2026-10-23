@@ -6,6 +6,8 @@ export const RESEARCH_STUDIO_TITLE = 'Research Studio'
 export const RESEARCH_STUDIO_TAGLINE =
   'Ancient Wisdom. Modern Africa. Questions Worth Exploring.'
 
+export const GREAT_AFRICAN_GLOBAL_TITLE = 'Great African Global'
+
 /** Default line on 1280×720 episode thumbnails */
 export const THUMBNAIL_DEFAULT_TAGLINE = 'Think Deeply · Speak Freely · Question Everything'
 

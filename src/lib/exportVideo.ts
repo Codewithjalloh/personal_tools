@@ -1,4 +1,3 @@
-import { FFmpeg } from '@ffmpeg/ffmpeg'
 import { fetchFile } from '@ffmpeg/util'
 import type { ExportProgress, ExportSettings, SlideItem } from '../types'
 import {
@@ -6,13 +5,12 @@ import {
   renderSlideWithTitle,
   renderTitleAnimationFrames,
 } from './drawTitleText'
+import { execFfmpeg, isEncoderLoaded, loadFfmpeg } from './ffmpegClient'
 import { buildVideoFilterChain } from './ffmpegFilters'
 import { fileToPngBytes } from './fileToPng'
 import { buildTimeline, validateTimeline } from './timeline'
 
-let ffmpeg: FFmpeg | null = null
-let loadPromise: Promise<FFmpeg> | null = null
-let lastLogs: string[] = []
+export { isEncoderLoaded }
 
 export type ExportOverrides = {
   width?: number
@@ -38,48 +36,6 @@ function applyOverrides(settings: ExportSettings, overrides?: ExportOverrides): 
     totalDurationSec: overrides.totalDurationSec ?? settings.totalDurationSec,
     fastDraft: overrides.fastDraft ?? settings.fastDraft,
   }
-}
-
-async function getFfmpeg(onLoadProgress?: (ratio: number) => void): Promise<FFmpeg> {
-  if (ffmpeg?.loaded) return ffmpeg
-
-  if (!loadPromise) {
-    loadPromise = (async () => {
-      const ff = new FFmpeg()
-      lastLogs = []
-      ff.on('log', ({ message }) => {
-        lastLogs.push(message)
-        if (lastLogs.length > 40) lastLogs.shift()
-      })
-      ff.on('progress', ({ progress }) => {
-        onLoadProgress?.(Math.min(1, Math.max(0, progress)))
-      })
-
-      try {
-        const coreURL = new URL(
-          `${import.meta.env.BASE_URL}ffmpeg/ffmpeg-core.js`,
-          window.location.href,
-        ).href
-        const wasmURL = new URL(
-          `${import.meta.env.BASE_URL}ffmpeg/ffmpeg-core.wasm`,
-          window.location.href,
-        ).href
-        await ff.load({ coreURL, wasmURL })
-      } catch (cause) {
-        ffmpeg = null
-        loadPromise = null
-        const detail = cause instanceof Error ? cause.message : String(cause)
-        throw new Error(
-          `Could not load video encoder (check network / ad blockers). ${detail}`,
-        )
-      }
-
-      ffmpeg = ff
-      return ff
-    })()
-  }
-
-  return loadPromise
 }
 
 function report(onProgress: (p: ExportProgress) => void, phase: ExportProgress['phase'], progress: number) {
@@ -143,7 +99,7 @@ export async function exportSlideshowVideo(
   const h = effective.height
 
   report(onProgress, 'loading-encoder', 0.02)
-  const ff = await getFfmpeg((p) => report(onProgress, 'loading-encoder', 0.02 + p * 0.18))
+  const ff = await loadFfmpeg((p) => report(onProgress, 'loading-encoder', 0.02 + p * 0.18))
 
   report(onProgress, 'preparing', 0.22)
   const timeline = buildTimeline(
@@ -255,19 +211,7 @@ export async function exportSlideshowVideo(
 
   execArgs.push(...videoEncodeFinal, outFile)
 
-  try {
-    const code = await ff.exec(execArgs)
-    if (code !== 0) {
-      const tail = lastLogs.slice(-6).join(' ')
-      throw new Error(tail || `FFmpeg exited with code ${code}`)
-    }
-  } catch (cause) {
-    const tail = lastLogs.slice(-6).join(' ')
-    if (cause instanceof Error && cause.message && cause.message !== 'failed to import ffmpeg-core.js') {
-      throw tail ? new Error(`${cause.message} — ${tail}`) : cause
-    }
-    throw new Error(tail || 'Video encoding failed')
-  }
+  await execFfmpeg(ff, execArgs)
 
   const data = await ff.readFile(outFile)
   report(onProgress, 'encoding', 1)
@@ -283,8 +227,4 @@ export async function exportSlideshowVideo(
   const bytes = new Uint8Array(data as Uint8Array)
   if (bytes.byteLength === 0) throw new Error('Encoder produced an empty file')
   return new Blob([bytes], { type: mime })
-}
-
-export function isEncoderLoaded(): boolean {
-  return ffmpeg?.loaded ?? false
 }
