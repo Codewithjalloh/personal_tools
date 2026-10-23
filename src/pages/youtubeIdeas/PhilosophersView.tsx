@@ -2,7 +2,9 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   ALL_WORLD_FIGURES,
+  countActiveFilters,
   FIGURE_CATEGORIES,
+  filterWorldFigures,
   listFigureRegions,
   type FigureCategory,
 } from '../../../shared/youtubeIdeas/worldFigures'
@@ -25,26 +27,15 @@ export function PhilosophersView() {
   const [era, setEra] = useState<'all' | 'ancient' | 'historical' | 'contemporary'>('all')
   const regions = useMemo(() => listFigureRegions(), [])
 
-  const filtered = useMemo(() => {
-    let list = [...ALL_WORLD_FIGURES].sort((a, b) => a.name.localeCompare(b.name))
-    if (region !== 'All regions') list = list.filter((p) => p.region === region)
-    if (category !== 'all') list = list.filter((p) => p.category === category)
-    if (era !== 'all') list = list.filter((p) => p.era === era)
-    const q = query.trim().toLowerCase()
-    if (q) {
-      list = list.filter(
-        (p) =>
-          p.name.toLowerCase().includes(q) ||
-          p.tradition.toLowerCase().includes(q) ||
-          p.bio.toLowerCase().includes(q) ||
-          p.themes.some(
-            (t) =>
-              t.title.toLowerCase().includes(q) || t.explore.toLowerCase().includes(q),
-          ),
-      )
-    }
-    return list
-  }, [query, region, category, era])
+  const filtered = useMemo(
+    () => filterWorldFigures(ALL_WORLD_FIGURES, { query, region, category, era }),
+    [query, region, category, era],
+  )
+
+  const activeFilterCount = useMemo(
+    () => countActiveFilters({ query, region, category, era }),
+    [query, region, category, era],
+  )
 
   return (
     <div className="space-y-6">
@@ -61,7 +52,7 @@ export function PhilosophersView() {
           <button
             key={c.id}
             type="button"
-            onClick={() => setCategory(c.id)}
+            onClick={() => setCategory(c.id as FigureCategory | 'all')}
             className={`rounded-full px-3 py-1.5 text-xs font-medium transition ${
               category === c.id
                 ? 'bg-amber-500/20 text-amber-200 ring-1 ring-amber-500/40'
@@ -102,7 +93,26 @@ export function PhilosophersView() {
           <option value="historical">Historical</option>
           <option value="contemporary">Alive / contemporary</option>
         </select>
+        {activeFilterCount > 0 && (
+          <button
+            type="button"
+            onClick={() => {
+              setQuery('')
+              setRegion('All regions')
+              setCategory('all')
+              setEra('all')
+            }}
+            className="rounded-lg border border-zinc-700 px-3 py-2 text-sm text-zinc-400 hover:border-zinc-500 hover:text-zinc-200"
+          >
+            Clear filters
+          </button>
+        )}
       </div>
+
+      <p className="text-xs text-zinc-500">
+        Showing {filtered.length} of {ALL_WORLD_FIGURES.length} profiles
+        {activeFilterCount > 0 ? ' (filtered)' : ''}
+      </p>
 
       <ul className="grid gap-3 sm:grid-cols-2">
         {filtered.map((p) => (
