@@ -9,6 +9,8 @@ import { SavedView } from './pages/youtubeIdeas/SavedView'
 import { SavedIdeaDetailView } from './pages/youtubeIdeas/SavedIdeaDetailView'
 import { SeriesView } from './pages/youtubeIdeas/SeriesView'
 import { SettingsView } from './pages/youtubeIdeas/SettingsView'
+import { PhilosophersView } from './pages/youtubeIdeas/PhilosophersView'
+import { PhilosopherDetailView } from './pages/youtubeIdeas/PhilosopherDetailView'
 
 export default function App() {
   return (
@@ -22,6 +24,8 @@ export default function App() {
           <Route path="generate" element={<GenerateView />} />
           <Route path="saved" element={<SavedView />} />
           <Route path="saved/:ideaId" element={<SavedIdeaDetailView />} />
+          <Route path="philosophers" element={<PhilosophersView />} />
+          <Route path="philosophers/:philosopherId" element={<PhilosopherDetailView />} />
           <Route path="series" element={<SeriesView />} />
           <Route path="settings" element={<SettingsView />} />
         </Route>
