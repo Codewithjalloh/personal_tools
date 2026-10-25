@@ -3,7 +3,7 @@ import { readdir } from 'node:fs/promises'
 import { join } from 'node:path'
 
 const handlersDir = 'api'
-const apiDir = 'api'
+const apiDir = 'api-dist'
 const entries = (await readdir(handlersDir)).filter((f) => f.endsWith('.ts'))
 
 if (entries.length === 0) {
