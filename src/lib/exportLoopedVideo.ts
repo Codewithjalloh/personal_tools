@@ -5,6 +5,8 @@ import { execFfmpeg, getFfmpegLastLogs, loadFfmpeg } from './ffmpegClient'
 export type LoopedVideoExportOptions = {
   fastDraft?: boolean
   includeAudio?: boolean
+  /** One cycle length of the source clip (for smooth loop joins). */
+  sourceDurationSec?: number
 }
 
 function report(onProgress: (p: ExportProgress) => void, phase: ExportProgress['phase'], progress: number) {
@@ -16,6 +18,44 @@ function inputExt(file: File, fallback: string): string {
   return m ? m[1].toLowerCase() : fallback
 }
 
+function buildLoopedVideoArgs(
+  videoName: string,
+  durationSec: number,
+  sourceDurationSec: number,
+  includeAudio: boolean,
+): string[] {
+  const loopSec = Math.max(0.05, sourceDurationSec)
+
+  if (loopSec >= durationSec - 0.05) {
+    const args = ['-i', videoName, '-t', durationSec.toFixed(4), '-map', '0:v:0']
+    if (includeAudio) {
+      args.push('-map', '0:a?', '-c:a', 'aac', '-b:a', '128k', '-shortest')
+    } else {
+      args.push('-an')
+    }
+    return args
+  }
+
+  const exec = [
+    '-stream_loop',
+    '-1',
+    '-i',
+    videoName,
+    '-t',
+    durationSec.toFixed(4),
+    '-map',
+    '0:v:0',
+  ]
+
+  if (includeAudio) {
+    exec.push('-map', '0:a?', '-c:a', 'aac', '-b:a', '128k', '-shortest')
+  } else {
+    exec.push('-an')
+  }
+
+  return exec
+}
+
 export async function exportLoopedVideo(
   videoFile: File,
   durationSec: number,
@@ -25,6 +65,7 @@ export async function exportLoopedVideo(
   const videoName = `extend_loop.${inputExt(videoFile, 'mp4')}`
   const outFile = 'extend_loop_output.mp4'
   const includeAudio = options?.includeAudio ?? true
+  const sourceDurationSec = options?.sourceDurationSec
 
   report(onProgress, 'loading-encoder', 0.02)
   const ff = await loadFfmpeg((p) => report(onProgress, 'loading-encoder', 0.02 + p * 0.18))
@@ -41,27 +82,24 @@ export async function exportLoopedVideo(
     ? ['-c:v', 'libx264', '-preset', 'ultrafast', '-crf', '28', '-pix_fmt', 'yuv420p']
     : ['-c:v', 'libx264', '-preset', 'ultrafast', '-pix_fmt', 'yuv420p', '-movflags', '+faststart']
 
-  const execArgs = [
-    '-stream_loop',
-    '-1',
-    '-i',
-    videoName,
-    '-t',
-    durationSec.toFixed(4),
-    '-map',
-    '0:v:0',
-  ]
+  const execArgs =
+    sourceDurationSec != null && sourceDurationSec > 0
+      ? buildLoopedVideoArgs(videoName, durationSec, sourceDurationSec, includeAudio)
+      : [
+          '-stream_loop',
+          '-1',
+          '-i',
+          videoName,
+          '-t',
+          durationSec.toFixed(4),
+          '-map',
+          '0:v:0',
+          ...(includeAudio
+            ? ['-map', '0:a?', '-c:a', 'aac', '-b:a', '128k']
+            : ['-an']),
+        ]
 
-  if (includeAudio) {
-    execArgs.push('-map', '0:a?')
-    execArgs.push('-c:a', 'aac', '-b:a', '128k')
-  } else {
-    execArgs.push('-an')
-  }
-
-  execArgs.push(...videoEncode, outFile)
-
-  await execFfmpeg(ff, execArgs)
+  await execFfmpeg(ff, [...execArgs, ...videoEncode, outFile])
 
   const data = await ff.readFile(outFile)
   report(onProgress, 'encoding', 1)

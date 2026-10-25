@@ -3,12 +3,8 @@ import { LoopMotionPicker } from '../components/LoopMotionPicker'
 import { TitleCardControls } from '../components/TitleCardControls'
 import { ToolPageHeader } from '../components/layout/ToolPageHeader'
 import { loadImageElement } from '../lib/drawFrame'
-import {
-  drawLoopMotionFrame,
-  motionAtElapsed,
-  normalizeMotionSelection,
-  type LoopMotionStyle,
-} from '../lib/loopMotion'
+import { drawMotionTimeline } from '../lib/loopMotionBlend'
+import { normalizeMotionSelection, type LoopMotionStyle } from '../lib/loopMotion'
 import {
   buildLoopSourceFromImageFile,
   buildLoopSourceFromText,
@@ -61,7 +57,7 @@ export function VideoLoopPage() {
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null)
   const [fit, setFit] = useState<FitMode>('cover')
-  const [motionStyles, setMotionStyles] = useState<LoopMotionStyle[]>(['pulse'])
+  const [motionStyles, setMotionStyles] = useState<LoopMotionStyle[]>(['sway'])
   const [sourceClipSec, setSourceClipSec] = useState(DEFAULT_SOURCE_CLIP_SEC)
 
   const [textCard, setTextCard] = useState<TitleCardSettings>({
@@ -178,8 +174,7 @@ export function VideoLoopPage() {
 
   const drawTimingFrame = useCallback(
     (ctx: CanvasRenderingContext2D, img: HTMLImageElement, elapsedSec: number) => {
-      const { style, segmentProgress } = motionAtElapsed(elapsedSec, normalizedMotions, previewCycleSec)
-      drawLoopMotionFrame(ctx, img, 1280, 720, fit, style, segmentProgress)
+      drawMotionTimeline(ctx, img, 1280, 720, fit, elapsedSec, normalizedMotions, previewCycleSec)
     },
     [fit, normalizedMotions, previewCycleSec],
   )
@@ -377,7 +372,11 @@ export function VideoLoopPage() {
           setExportPhase(p.phase)
           setProgress(p.progress)
         },
-        { fastDraft, includeAudio: canIncludeAudio && includeAudio },
+        {
+          fastDraft,
+          includeAudio: canIncludeAudio && includeAudio,
+          sourceDurationSec: sourceDurationSec ?? undefined,
+        },
       )
       setPreviewBlob(blob)
       setPreviewUrl((prev) => {

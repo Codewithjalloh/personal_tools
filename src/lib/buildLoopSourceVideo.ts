@@ -5,7 +5,8 @@ import {
 } from './drawTitleText'
 import { execFfmpeg, getFfmpegLastLogs, loadFfmpeg } from './ffmpegClient'
 import { scaleFilter } from './ffmpegFilters'
-import { loopMotionZoompanFilter, normalizeMotionSelection, type LoopMotionStyle } from './loopMotion'
+import type { LoopMotionStyle } from './loopMotion'
+import { renderLoopMotionFrameFiles } from './renderLoopMotionFrames'
 import type { ExportProgress, ExportSettings, FitMode, TitleCardSettings } from '../types'
 
 export type BuildLoopSourceOptions = {
@@ -15,85 +16,6 @@ export type BuildLoopSourceOptions = {
   fit: FitMode
   motions: LoopMotionStyle[]
   fastDraft?: boolean
-}
-
-function segmentMotionFilter(
-  settings: ExportSettings,
-  inputIndex: number,
-  motion: LoopMotionStyle,
-  width: number,
-  height: number,
-  segSec: number,
-  outLabel: string,
-): string {
-  const inV = `[${inputIndex}:v]`
-  const scaled = `[s${inputIndex}]`
-  let chain = scaleFilter(settings, inV, scaled)
-  const motionFilter = loopMotionZoompanFilter(motion, width, height, segSec, scaled, outLabel)
-  if (motionFilter) {
-    chain += `;${motionFilter}`
-  } else {
-    chain += `;${scaled}trim=duration=${segSec.toFixed(4)},setpts=PTS-STARTPTS${outLabel}`
-  }
-  return chain
-}
-
-function buildSingleMotionImageArgs(
-  settings: ExportSettings,
-  imageName: string,
-  width: number,
-  height: number,
-  motion: LoopMotionStyle,
-  clipDurationSec: number,
-): string[] {
-  const dur = clipDurationSec.toFixed(4)
-  let vf = scaleFilter(settings, '[0:v]', '[scaled]')
-  let outLabel = '[scaled]'
-  const motionFilter = loopMotionZoompanFilter(motion, width, height, clipDurationSec, '[scaled]', '[out]')
-  if (motionFilter) {
-    vf += `;${motionFilter}`
-    outLabel = '[out]'
-  }
-  return [
-    '-loop',
-    '1',
-    '-t',
-    dur,
-    '-i',
-    imageName,
-    '-filter_complex',
-    vf,
-    '-map',
-    outLabel,
-    '-t',
-    dur,
-  ]
-}
-
-function buildMultiMotionImageArgs(
-  settings: ExportSettings,
-  imageName: string,
-  width: number,
-  height: number,
-  motions: LoopMotionStyle[],
-  totalSec: number,
-): string[] {
-  const n = motions.length
-  const segSec = totalSec / n
-  const args: string[] = []
-  for (let i = 0; i < n; i++) {
-    args.push('-loop', '1', '-t', segSec.toFixed(4), '-i', imageName)
-  }
-  const filters: string[] = []
-  const labels: string[] = []
-  for (let i = 0; i < n; i++) {
-    const out = `[v${i}]`
-    labels.push(out)
-    filters.push(segmentMotionFilter(settings, i, motions[i], width, height, segSec, out))
-  }
-  filters.push(`${labels.join('')}concat=n=${n}:v=1:a=0[outv]`)
-  const dur = totalSec.toFixed(4)
-  return [...args, '-filter_complex', filters.join(';'), '-map', '[outv]', '-t', dur]
 }
 
 function report(onProgress: (p: ExportProgress) => void, phase: ExportProgress['phase'], progress: number) {
@@ -164,7 +86,7 @@ async function encodeToLoopSourceFile(
 
   const data = await ff.readFile(outFile)
   report(onProgress, 'encoding', 1)
-  await ff.deleteFile(outFile)
+  await ff.deleteFile(outFile).catch(() => {})
 
   const bytes = new Uint8Array(data as Uint8Array)
   if (bytes.byteLength === 0) {
@@ -181,33 +103,27 @@ export async function buildLoopSourceFromImageBlob(
 ): Promise<File> {
   const width = options.width ?? 1280
   const height = options.height ?? 720
-  const settings = miniExportSettings(width, height, options.fit, options.fastDraft)
-  const imageName = 'loop_still.png'
-  const bytes = new Uint8Array(await blob.arrayBuffer())
+  const fps = options.fastDraft ? 20 : options.clipDurationSec > 20 ? 24 : 30
 
   return encodeToLoopSourceFile(
     onProgress,
     async (ff) => {
-      await ff.writeFile(imageName, bytes)
-      const motions = normalizeMotionSelection(options.motions)
-      if (motions.length === 1) {
-        return buildSingleMotionImageArgs(
-          settings,
-          imageName,
-          width,
-          height,
-          motions[0],
-          options.clipDurationSec,
-        )
-      }
-      return buildMultiMotionImageArgs(
-        settings,
-        imageName,
+      const { pattern, files } = await renderLoopMotionFrameFiles(blob, {
         width,
         height,
-        motions,
-        options.clipDurationSec,
-      )
+        durationSec: options.clipDurationSec,
+        fit: options.fit,
+        motions: options.motions,
+        fps,
+        onFrame: (frame, total) => {
+          report(onProgress, 'preparing', 0.28 + (frame / total) * 0.14)
+        },
+      })
+      for (const file of files) {
+        await ff.writeFile(file.name, file.bytes)
+      }
+      const dur = options.clipDurationSec.toFixed(4)
+      return ['-framerate', String(fps), '-i', pattern, '-t', dur, '-map', '0:v:0']
     },
     options,
   )
