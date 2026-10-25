@@ -9,8 +9,6 @@ lerna-debug.log*
 
 node_modules
 dist
-api/*.js
-api/*.js.map
 public/ffmpeg/
 dist-ssr
 *.local

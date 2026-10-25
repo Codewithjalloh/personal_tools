@@ -2,8 +2,6 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { generateIdeas } from '../server/generateIdeas'
 import { runWithRequestSecretsAsync, secretsFromHeaders, resolveOpenAiKey } from '../server/requestSecrets'
 
-export { config } from './vercelConfig'
-
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })

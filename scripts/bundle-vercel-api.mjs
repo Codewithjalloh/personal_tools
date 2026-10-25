@@ -2,14 +2,12 @@ import * as esbuild from 'esbuild'
 import { readdir } from 'node:fs/promises'
 import { join } from 'node:path'
 
-const handlersDir = 'api-handlers'
+const handlersDir = 'api'
 const apiDir = 'api'
-const entries = (await readdir(handlersDir)).filter(
-  (f) => f.endsWith('.ts') && f !== 'vercelConfig.ts',
-)
+const entries = (await readdir(handlersDir)).filter((f) => f.endsWith('.ts'))
 
 if (entries.length === 0) {
-  console.log('bundle-vercel-api: no api-handlers/*.ts entrypoints')
+  console.log('bundle-vercel-api: no api/*.ts entrypoints')
   process.exit(0)
 }
 

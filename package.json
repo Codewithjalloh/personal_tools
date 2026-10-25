@@ -11,7 +11,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "build:api": "node scripts/bundle-vercel-api.mjs",
-    "vercel-build": "npm run build && npm run build:api",
+    "vercel-build": "npm run build",
     "lint": "oxlint",
     "test": "vitest run",
     "preview": "vite preview"
