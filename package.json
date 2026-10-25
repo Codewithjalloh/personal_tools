@@ -10,6 +10,8 @@
     "postinstall": "node scripts/copy-ffmpeg-core.mjs",
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:api": "node scripts/bundle-vercel-api.mjs",
+    "vercel-build": "npm run build && npm run build:api",
     "lint": "oxlint",
     "test": "vitest run",
     "preview": "vite preview"
@@ -32,6 +34,7 @@
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.2",
+    "esbuild": "^0.25.0",
     "oxlint": "^1.88.0",
     "tailwindcss": "^4.3.3",
     "typescript": "~6.0.3",
