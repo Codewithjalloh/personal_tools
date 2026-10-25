@@ -4,6 +4,8 @@ import { generateEpisodeContent, type ContentKind } from '../server/generateCont
 import { generatedEpisodeSchema } from '../server/youtubeIdeasSchemas'
 import { runWithRequestSecretsAsync, secretsFromHeaders, resolveOpenAiKey } from '../server/requestSecrets'
 
+export { config } from './vercelConfig'
+
 const bodySchema = z.object({
   kind: z.enum(['script', 'youtube-description', 'youtube-tags', 'facebook-post', 'expand-topic']),
   episode: generatedEpisodeSchema,

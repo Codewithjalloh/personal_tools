@@ -3,6 +3,8 @@ import { z } from 'zod'
 import { searchImagesForQueries } from '../server/searchImages'
 import { runWithRequestSecretsAsync, secretsFromHeaders } from '../server/requestSecrets'
 
+export { config } from './vercelConfig'
+
 const bodySchema = z.object({
   queries: z.array(z.string().min(1)).min(1).max(10),
   limit: z.number().int().min(1).max(15).optional(),

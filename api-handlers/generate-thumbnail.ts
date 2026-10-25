@@ -3,6 +3,8 @@ import { generateAiThumbnail } from '../server/generateThumbnail'
 import { generatedEpisodeSchema } from '../server/youtubeIdeasSchemas'
 import { runWithRequestSecretsAsync, secretsFromHeaders, resolveOpenAiKey } from '../server/requestSecrets'
 
+export { config } from './vercelConfig'
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })

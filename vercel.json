@@ -4,12 +4,5 @@
   "buildCommand": "npm run vercel-build",
   "outputDirectory": "dist",
   "installCommand": "npm install",
-  "functions": {
-    "api/config-status.js": { "maxDuration": 60 },
-    "api/generate-content.js": { "maxDuration": 60 },
-    "api/generate-ideas.js": { "maxDuration": 60 },
-    "api/generate-thumbnail.js": { "maxDuration": 60 },
-    "api/search-images.js": { "maxDuration": 60 }
-  },
   "rewrites": [{ "source": "/((?!api/).*)", "destination": "/index.html" }]
 }
